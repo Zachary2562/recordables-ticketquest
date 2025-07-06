@@ -25,13 +25,10 @@ from flask_principal import UserNeed
 from application import app, db
 from application.flicket.models.flicket_user import FlicketUser
 from application.flicket.models.flicket_user import FlicketGroup
-from application.flicket.models.flicket_models import FlicketTicket
+from application.flicket.models.flicket_models import FlicketTicket, FlicketPriority, FlicketStatus
 from application.flicket.forms.search import SearchTicketForm
 from application.flicket.scripts.hash_password import hash_password
-from application.flicket_admin.forms.forms_admin import AddGroupForm
-from application.flicket_admin.forms.forms_admin import AddUserForm
-from application.flicket_admin.forms.forms_admin import EnterPasswordForm
-from application.flicket_admin.forms.forms_admin import EditUserForm
+from application.flicket_admin.forms.forms_admin import AddGroupForm, AddUserForm, EnterPasswordForm, EditUserForm, PriorityForm, StatusForm
 from . import admin_bp
 
 principals = Principal(app)
@@ -311,7 +308,7 @@ def edit_user():
     return render_template('admin_user.html',
                            title='Edit User',
                            admin_edit=True,
-                           form=form, user=user)
+                           form=form, user=user)  # type: ignore[operator]
 
 
 # Delete user
@@ -417,3 +414,104 @@ def admin_delete_group():
     # noinspection PyUnresolvedReferences
     return render_template('admin_delete_group.html', title=title,
                            group_details=group_details, form=form)
+
+
+# --- PRIORITIES ---
+@admin_bp.route(app.config['ADMINHOME'] + 'priorities/', methods=['GET', 'POST'])
+@admin_bp.route(app.config['ADMINHOME'] + 'priorities/<int:page>', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def priorities(page=1):
+    query = FlicketPriority.query.order_by(FlicketPriority.priority.asc())
+    priorities = query.paginate(page=page, per_page=app.config['posts_per_page'])
+    return render_template('admin_priorities/list.html', title='Priorities', priorities=priorities, page=page)
+
+@admin_bp.route(app.config['ADMINHOME'] + 'add_priority/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def add_priority():
+    form = PriorityForm()
+    if form.validate_on_submit():
+        add_priority = FlicketPriority(priority=form.priority.data)
+        db.session.add(add_priority)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
+        flash(gettext('New priority "{}" added.'.format(form.priority.data)), category='success')
+        return redirect(url_for('admin_bp.priorities'))
+    return render_template('admin_priorities/edit.html', title='Add Priority', form=form)
+
+@admin_bp.route(app.config['ADMINHOME'] + 'edit_priority/<int:priority_id>/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def edit_priority(priority_id):
+    priority = FlicketPriority.query.get_or_404(priority_id)
+    form = PriorityForm(obj=priority)
+    if form.validate_on_submit():
+        priority.priority = form.priority.data
+        db.session.commit()  # type: ignore[attr-defined]
+        flash(gettext('Priority "{}" edited.'.format(form.priority.data)), category='success')
+        return redirect(url_for('admin_bp.priorities'))
+    form.priority.data = priority.priority
+    return render_template('admin_priorities/edit.html', title='Edit Priority', form=form, priority=priority)
+
+@admin_bp.route(app.config['ADMINHOME'] + 'delete_priority/<int:priority_id>/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def delete_priority(priority_id):
+    priority = FlicketPriority.query.get_or_404(priority_id)
+    if request.method == 'POST':
+        db.session.delete(priority)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
+        flash(gettext('Priority "{}" deleted.'.format(priority.priority)), category='success')
+        return redirect(url_for('admin_bp.priorities'))
+    notification = gettext('You are trying to delete priority: %(value)s.', value=priority.priority.upper())
+    return render_template('flicket_delete.html', notification=notification, title='Delete Priority')
+
+# --- STATUS ---
+@admin_bp.route(app.config['ADMINHOME'] + 'statuses/', methods=['GET', 'POST'])
+@admin_bp.route(app.config['ADMINHOME'] + 'statuses/<int:page>', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def statuses(page=1):
+    query = FlicketStatus.query.order_by(FlicketStatus.status.asc())
+    statuses = query.paginate(page=page, per_page=app.config['posts_per_page'])
+    return render_template('admin_statuses/list.html', title='Statuses', statuses=statuses, page=page)
+
+@admin_bp.route(app.config['ADMINHOME'] + 'add_status/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def add_status():
+    form = StatusForm()
+    if form.validate_on_submit():
+        add_status = FlicketStatus(status=form.status.data)
+        db.session.add(add_status)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
+        flash(gettext('New status "{}" added.'.format(form.status.data)), category='success')
+        return redirect(url_for('admin_bp.statuses'))
+    return render_template('admin_statuses/edit.html', title='Add Status', form=form)
+
+@admin_bp.route(app.config['ADMINHOME'] + 'edit_status/<int:status_id>/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def edit_status(status_id):
+    status = FlicketStatus.query.get_or_404(status_id)
+    form = StatusForm(obj=status)
+    if form.validate_on_submit():
+        status.status = form.status.data
+        db.session.commit()  # type: ignore[attr-defined]
+        flash(gettext('Status "{}" edited.'.format(form.status.data)), category='success')
+        return redirect(url_for('admin_bp.statuses'))
+    form.status.data = status.status
+    return render_template('admin_statuses/edit.html', title='Edit Status', form=form, status=status)
+
+@admin_bp.route(app.config['ADMINHOME'] + 'delete_status/<int:status_id>/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def delete_status(status_id):
+    status = FlicketStatus.query.get_or_404(status_id)
+    if request.method == 'POST':
+        db.session.delete(status)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
+        flash(gettext('Status "{}" deleted.'.format(status.status)), category='success')
+        return redirect(url_for('admin_bp.statuses'))
+    notification = gettext('You are trying to delete status: %(value)s.', value=status.status.upper())
+    return render_template('flicket_delete.html', notification=notification, title='Delete Status')

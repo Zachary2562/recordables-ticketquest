@@ -5,6 +5,7 @@
 
 import bcrypt
 from flask_babel import lazy_gettext
+from flask_babel import gettext
 from flask_wtf import FlaskForm
 from wtforms import BooleanField
 from wtforms import HiddenField
@@ -139,40 +140,40 @@ class AddUserForm(FlaskForm):
         form = super(AddUserForm, self).__init__(*args, **kwargs)
         self.locale.choices = [(_id, lang) for _id, lang in app.config['SUPPORTED_LANGUAGES'].items()]
 
-    username = StringField(lazy_gettext('username'),
+    username = StringField(str(lazy_gettext('username')),
                            validators=[Length(min=user_field_size['username_min'], max=user_field_size['username_max']),
                                        does_username_exist])
-    name = StringField(lazy_gettext('name'),
+    name = StringField(str(lazy_gettext('name')),
                        validators=[Length(min=user_field_size['name_min'], max=user_field_size['name_max'])])
-    email = StringField(lazy_gettext('email'),
+    email = StringField(str(lazy_gettext('email')),
                         validators=[Length(min=user_field_size['email_min'], max=user_field_size['email_max']),
                                     check_email])
-    job_title = StringField(lazy_gettext('job_title'), validators=[Length(max=user_field_size['job_title'])])
-    password = PasswordField(lazy_gettext('password'), validators=[
+    job_title = StringField(str(lazy_gettext('job_title')), validators=[Length(max=user_field_size['job_title'])])
+    password = PasswordField(str(lazy_gettext('password')), validators=[
         DataRequired(),
         EqualTo('confirm', message='Passwords must match'),
         check_password_formatting, Length(min=user_field_size['password_min'], max=user_field_size['password_max'])
     ])
-    confirm = PasswordField(lazy_gettext('Repeat Password'))
-    locale = SelectField(lazy_gettext('Locale'), validators=[DataRequired()], )
-    disabled = BooleanField(lazy_gettext('Disabled'))
-    submit = SubmitField(lazy_gettext('add_user'))
+    confirm = PasswordField(str(lazy_gettext('Repeat Password')))
+    locale = SelectField(str(lazy_gettext('Locale')), validators=[DataRequired()], )
+    disabled = BooleanField(str(lazy_gettext('Disabled')))
+    submit = SubmitField(str(lazy_gettext('add_user')))
 
 
 class EditUserForm(AddUserForm):
     user_id = HiddenField('user_id')
-    username = StringField(lazy_gettext('username'),
+    username = StringField(str(lazy_gettext('username')),
                            validators=[Length(min=user_field_size['username_min'], max=user_field_size['username_max']),
                                        check_username_edit])
-    email = StringField(lazy_gettext('email'),
+    email = StringField(str(lazy_gettext('email')),
                         validators=[Length(min=user_field_size['email_min'], max=user_field_size['email_max']),
                                     check_email_edit])
-    job_title = StringField(lazy_gettext('job_title'))
-    password = PasswordField(lazy_gettext('password'), validators=[
+    job_title = StringField(str(lazy_gettext('job_title')))
+    password = PasswordField(str(lazy_gettext('password')), validators=[
         EqualTo('confirm', message='Passwords must match'), check_password_edit])
-    confirm = PasswordField(lazy_gettext('Repeat Password'))
-    groups = SelectMultipleField(lazy_gettext('groups'), coerce=int)
-    submit = SubmitField(lazy_gettext('edit_user'))
+    confirm = PasswordField(str(lazy_gettext('Repeat Password')))
+    groups = SelectMultipleField(str(lazy_gettext('groups')), coerce=int)
+    submit = SubmitField(str(lazy_gettext('edit_user')))
 
     def __init__(self, *args, **kwargs):
         form = super(EditUserForm, self).__init__(*args, **kwargs)
@@ -181,7 +182,7 @@ class EditUserForm(AddUserForm):
 
 class AddGroupForm(FlaskForm):
     """ Add group form for flicket_admin section. """
-    group_name = StringField(lazy_gettext('group_name'), validators=[
+    group_name = StringField(str(lazy_gettext('group_name')), validators=[
         Length(min=user_field_size['group_min'], max=user_field_size['group_max']),
         DataRequired(),
         group_exists])
@@ -192,6 +193,16 @@ class EnterPasswordForm(FlaskForm):
     Form to delete user. User password is required.
     """
     id = HiddenField('id')
-    password = PasswordField(lazy_gettext('password'), validators=[DataRequired(), check_password,
+    password = PasswordField(str(lazy_gettext('password')), validators=[DataRequired(), check_password,
                                                                    Length(min=user_field_size['password_min'],
                                                                           max=user_field_size['password_max'])])
+
+
+class PriorityForm(FlaskForm):
+    priority = StringField('Priority', validators=[DataRequired(), Length(min=1, max=64)])
+    submit = SubmitField('Add Priority')
+
+
+class StatusForm(FlaskForm):
+    status = StringField('Status', validators=[DataRequired(), Length(min=1, max=64)])
+    submit = SubmitField('Add Status')

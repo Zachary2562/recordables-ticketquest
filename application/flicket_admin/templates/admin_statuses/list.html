@@ -1,0 +1,29 @@
+{% extends "admin.html" %}
+{% block content %}
+    {% include 'admin_menu.html' %}
+    <div class="container mt-4">
+        <h2>Statuses</h2>
+        <a href="{{ url_for('admin_bp.add_status') }}" class="btn btn-primary mb-2">Add Status</a>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for status in statuses.items %}
+                <tr>
+                    <td>{{ status.id }}</td>
+                    <td>{{ status.status }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_bp.edit_status', status_id=status.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{{ url_for('admin_bp.delete_status', status_id=status.id) }}" class="btn btn-sm btn-danger">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %} 

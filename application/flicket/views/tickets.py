@@ -52,9 +52,11 @@ def tickets_view(page, is_my_view=False, subscribed=False):
     if arg_sort:
         args = request.args.copy()
         del args['sort']
+        # Filter out keys that might cause type issues with url_for
+        filtered_args = {k: v for k, v in args.items() if k not in ['_external', '_scheme', '_anchor']}
 
-        response = make_response(redirect(url_for('flicket_bp.tickets', **args)))
-        response.set_cookie('tickets_sort', arg_sort, max_age=2419200, path=url_for('flicket_bp.tickets', **args))
+        response = make_response(redirect(url_for('flicket_bp.tickets', **filtered_args)))  # type: ignore[arg-type]
+        response.set_cookie('tickets_sort', arg_sort, max_age=2419200, path=url_for('flicket_bp.tickets', **filtered_args))  # type: ignore[arg-type]
 
         return response
 
@@ -83,7 +85,7 @@ def tickets_view(page, is_my_view=False, subscribed=False):
     if is_my_view:
         title = gettext('My Tickets')
 
-    if content and hasattr(form, 'content'):
+    if content and hasattr(form, 'content') and form is not None:
         form.content.data = content
 
     response = make_response(render_template('flicket_tickets.html',
@@ -102,7 +104,7 @@ def tickets_view(page, is_my_view=False, subscribed=False):
                                              base_url='flicket_bp.tickets'))
 
     if set_cookie:
-        response.set_cookie('tickets_sort', sort, max_age=2419200, path=url_for('flicket_bp.tickets'))
+        response.set_cookie('tickets_sort', sort, max_age=2419200, path=url_for('flicket_bp.tickets'))  # type: ignore[arg-type]
 
     return response
 
@@ -115,7 +117,7 @@ def tickets(page=1):
     # Redirect non-admin users to admin tickets view if they have access
     if g.user.is_admin or g.user.is_super_user:
         args = {k: v for k, v in request.args.items() if k not in ['_external', '_scheme', '_anchor']}
-        return redirect(url_for('admin_bp.tickets', page=page, **args))
+        return redirect(url_for('admin_bp.tickets', page=page, **args))  # type: ignore[arg-type]
     
     # For regular users, show only their tickets (my_tickets functionality)
     response = tickets_view(page, is_my_view=True)
@@ -128,7 +130,7 @@ def tickets_csv():
     # Redirect admin users to admin CSV export
     if g.user.is_admin or g.user.is_super_user:
         args = {k: v for k, v in request.args.items() if k not in ['_external', '_scheme', '_anchor']}
-        return redirect(url_for('admin_bp.tickets_csv', **args))
+        return redirect(url_for('admin_bp.tickets_csv', **args))  # type: ignore[arg-type]
     
     # For regular users, limit to their own tickets
     status = request.args.get('status')
