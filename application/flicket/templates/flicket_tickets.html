@@ -2,6 +2,10 @@
 <!-- extend from base layout -->
 {% block content %}
     <!-- {{ self._TemplateReference__context.name }} -->
+    {% if show_admin_menu %}
+    <div class="container">
+        {% include 'admin_menu.html' %}
+    {% endif %}
     <script src="{{ url_for('flicket_bp.static', filename='js/uri.js') }}"></script>
 
     {% include('flicket_apijson_users.html') %}
@@ -9,15 +13,14 @@
     {% include('flicket_apijson_departments.html') %}
     {% include('flicket_apijson_statuses.html') %}
 
-
-    <div class="container">
+    <div class="container"{% if show_admin_menu %} style="padding-left:0;padding-right:0;"{% endif %}>
 
         <div class="row m-2 p-2 border rounded bg-white">
             <div class="col">
                 <h1>{{ title }}</h1>
                 <p>
                     {{ _('Download results as a csv file') }} <a
-                        href="{{ url_for('flicket_bp.tickets_csv', status=status, department=department, category=category, content=content, user_id=user_id) }}"
+                        href="{{ url_for(base_url + '_csv', status=status, department=department, category=category, content=content, user_id=user_id) }}"
                         title="csv file">
                     <i class="fas fa-file-csv"></i>
                 </a>.
@@ -55,7 +58,7 @@
                 </div>
                 <div class="col-md col-6 text-center">
                     <button class="btn btn-link btn-sm border-primary">
-                        <a href="{{ url_for('flicket_bp.tickets') }}">reset</a>
+                        <a href="{{ url_for(base_url) }}">reset</a>
                     </button>
                 </div>
             </form>
@@ -303,4 +306,7 @@
         </div>
 
     </div>
+    {% if show_admin_menu %}
+    </div>
+    {% endif %}
 {% endblock %}

@@ -83,7 +83,7 @@ def tickets_view(page, is_my_view=False, subscribed=False):
     if is_my_view:
         title = gettext('My Tickets')
 
-    if content:
+    if content and hasattr(form, 'content'):
         form.content.data = content
 
     response = make_response(render_template('flicket_tickets.html',
@@ -112,15 +112,25 @@ def tickets_view(page, is_my_view=False, subscribed=False):
 @flicket_bp.route(app.config['FLICKET'] + 'tickets/<int:page>/', methods=['GET', 'POST'])
 @login_required
 def tickets(page=1):
-    response = tickets_view(page)
-
+    # Redirect non-admin users to admin tickets view if they have access
+    if g.user.is_admin or g.user.is_super_user:
+        args = {k: v for k, v in request.args.items() if k not in ['_external', '_scheme', '_anchor']}
+        return redirect(url_for('admin_bp.tickets', page=page, **args))
+    
+    # For regular users, show only their tickets (my_tickets functionality)
+    response = tickets_view(page, is_my_view=True)
     return response
 
 
 @flicket_bp.route(app.config['FLICKET'] + 'tickets_csv/', methods=['GET', 'POST'])
 @login_required
 def tickets_csv():
-    # get request arguments from the url
+    # Redirect admin users to admin CSV export
+    if g.user.is_admin or g.user.is_super_user:
+        args = {k: v for k, v in request.args.items() if k not in ['_external', '_scheme', '_anchor']}
+        return redirect(url_for('admin_bp.tickets_csv', **args))
+    
+    # For regular users, limit to their own tickets
     status = request.args.get('status')
     department = request.args.get('department')
     category = request.args.get('category')
@@ -129,10 +139,12 @@ def tickets_csv():
 
     ticket_query, form = FlicketTicket.query_tickets(department=department, category=category, status=status,
                                                      user_id=user_id, content=content)
+    # Filter to user's own tickets
+    ticket_query = FlicketTicket.my_tickets(ticket_query)
     ticket_query = ticket_query.limit(app.config['csv_dump_limit'])
 
     date_stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    file_name = date_stamp + 'ticketdump.csv'
+    file_name = date_stamp + 'my_ticketdump.csv'
 
     csv_contents = 'Ticket_ID,Priority,Title,Submitted By,Date,Replies,Category,Status,Assigned,URL\n'
     for ticket in ticket_query:

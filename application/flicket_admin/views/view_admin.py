@@ -11,6 +11,8 @@ from flask import redirect
 from flask import render_template
 from flask import request
 from flask import url_for
+from flask import make_response
+from flask import Response
 from flask_babel import gettext
 from flask_login import current_user
 from flask_login import login_required
@@ -23,6 +25,8 @@ from flask_principal import UserNeed
 from application import app, db
 from application.flicket.models.flicket_user import FlicketUser
 from application.flicket.models.flicket_user import FlicketGroup
+from application.flicket.models.flicket_models import FlicketTicket
+from application.flicket.forms.search import SearchTicketForm
 from application.flicket.scripts.hash_password import hash_password
 from application.flicket_admin.forms.forms_admin import AddGroupForm
 from application.flicket_admin.forms.forms_admin import AddUserForm
@@ -36,6 +40,85 @@ admin_only = RoleNeed('flicket_admin')
 admin_permission = Permission(admin_only)
 
 
+def clean_csv_data(input_text):
+    output_text = input_text.replace('"', "'")
+    return output_text
+
+
+def admin_tickets_view(page):
+    """
+        Admin tickets view function - same as regular tickets but with admin permissions.
+    """
+
+    form = SearchTicketForm()
+
+    # get request arguments from the url
+    status = request.args.get('status')
+    department = request.args.get('department')
+    category = request.args.get('category')
+    content = request.args.get('content')
+    user_id = request.args.get('user_id')
+    assigned_id = request.args.get('assigned_id')
+    created_id = request.args.get('created_id')
+
+    if form.validate_on_submit():
+        redirect_url = FlicketTicket.form_redirect(form, url='admin_bp.tickets')
+        return redirect(redirect_url)
+
+    arg_sort = request.args.get('sort')
+    if arg_sort:
+        args = request.args.copy()
+        del args['sort']
+        filtered_args = {k: v for k, v in args.items() if k not in ['_external', '_scheme', '_anchor']}
+        if '_external' in filtered_args:
+            del filtered_args['_external']
+        response = make_response(redirect(url_for('admin_bp.tickets', **filtered_args)))  # type: ignore
+        response.set_cookie('admin_tickets_sort', arg_sort, max_age=2419200, path=app.config['ADMINHOME'] + 'tickets/')
+        return response
+
+    sort = request.cookies.get('admin_tickets_sort')
+    if sort:
+        set_cookie = True
+    else:
+        sort = 'priority_desc'
+        set_cookie = False
+
+    ticket_query, form = FlicketTicket.query_tickets(form, department=department, category=category, status=status,
+                                                     user_id=user_id, content=content, assigned_id=assigned_id,
+                                                     created_id=created_id)
+    ticket_query = FlicketTicket.sorted_tickets(ticket_query, sort)
+
+    number_results = ticket_query.count()
+
+    ticket_query = ticket_query.paginate(page=page, per_page=app.config['posts_per_page'])
+
+    title = gettext('All Tickets')
+
+    if content and form is not None and hasattr(form, 'content'):
+        form.content.data = content
+
+    response = make_response(render_template('flicket_tickets.html',
+                                             title=title,
+                                             form=form,
+                                             tickets=ticket_query,
+                                             page=page,
+                                             number_results=number_results,
+                                             status=status,
+                                             department=department,
+                                             category=category,
+                                             user_id=user_id,
+                                             created_id=created_id,
+                                             assigned_id=assigned_id,
+                                             sort=sort,
+                                             base_url='admin_bp.tickets',
+                                             show_admin_menu=True))
+
+    if set_cookie:
+        response.set_cookie('admin_tickets_sort', sort, max_age=2419200, path=app.config['ADMINHOME'] + 'tickets/')
+
+    return response
+
+
 def create_user(username, password, email=None, name=None, job_title=None, locale=None, disabled=None):
     password = hash_password(password)
     register = FlicketUser(username=username,
@@ -44,10 +127,10 @@ def create_user(username, password, email=None, name=None, job_title=None, local
                            password=password,
                            job_title=job_title,
                            date_added=datetime.datetime.now(),
-                           locale=locale,
-                           disabled=disabled)
-    db.session.add(register)
-    db.session.commit()
+                           locale=locale or "",
+                           disabled=disabled if disabled is not None else False)
+    db.session.add(register)  # type: ignore[attr-defined]
+    db.session.commit()  # type: ignore[attr-defined]
 
 
 # add permissions
@@ -75,6 +158,66 @@ def index():
     return render_template('admin.html', title='Admin')
 
 
+# Admin tickets view - accessible only to admin users
+@admin_bp.route(app.config['ADMINHOME'] + 'tickets/', methods=['GET', 'POST'])
+@admin_bp.route(app.config['ADMINHOME'] + 'tickets/<int:page>/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def tickets(page=1):
+    response = admin_tickets_view(page)
+    return response
+
+
+# Admin tickets CSV export
+@admin_bp.route(app.config['ADMINHOME'] + 'tickets_csv/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def tickets_csv():
+    # get request arguments from the url
+    status = request.args.get('status')
+    department = request.args.get('department')
+    category = request.args.get('category')
+    content = request.args.get('content')
+    user_id = request.args.get('user_id')
+
+    ticket_query, form = FlicketTicket.query_tickets(department=department, category=category, status=status,
+                                                     user_id=user_id, content=content)
+    ticket_query = ticket_query.limit(app.config['csv_dump_limit'])
+
+    date_stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    file_name = date_stamp + 'admin_ticketdump.csv'
+
+    csv_contents = 'Ticket_ID,Priority,Title,Submitted By,Date,Replies,Category,Status,Assigned,URL\n'
+    for ticket in ticket_query:
+
+        if hasattr(ticket.assigned, 'name'):
+            _name = ticket.assigned.name
+        else:
+            _name = 'Not assigned'
+
+        csv_contents += '{},{},"{}",{},{},{},{} - {},{},{},{}{}\n'.format(ticket.id_zfill,
+                                                                          ticket.ticket_priority.priority,
+                                                                          clean_csv_data(ticket.title),
+                                                                          ticket.user.name,
+                                                                          ticket.date_added.strftime("%Y-%m-%d"),
+                                                                          ticket.num_replies,
+                                                                          clean_csv_data(
+                                                                              ticket.category.department.department),
+                                                                          clean_csv_data(ticket.category.category),
+                                                                          ticket.current_status.status,
+                                                                          _name,
+                                                                          app.config["base_url"],
+                                                                          url_for("flicket_bp.ticket_view",
+                                                                                  ticket_id=ticket.id))
+
+    return Response(
+        csv_contents,
+        mimetype='text/csv',
+        headers={"Content-disposition":
+                     f"attachment; filename={file_name}"}
+    )
+
+
 # shows all users
 @admin_bp.route(app.config['ADMINHOME'] + 'users/', methods=['GET', 'POST'])
 @admin_bp.route(app.config['ADMINHOME'] + 'users/<int:page>', methods=['GET', 'POST'])
@@ -85,7 +228,7 @@ def users(page=1):
     users = users.paginate(page=page, per_page=app.config['posts_per_page'])
 
     # noinspection PyUnresolvedReferences
-    return render_template('admin_users.html', title='Users', users=users)
+    return render_template('admin_users.html', title='Users', users=users)  # type: ignore[misc]
 
 
 # add user
@@ -144,7 +287,7 @@ def edit_user():
             for g in groups:
                 group_id = FlicketGroup.query.filter_by(id=g).first()
                 group_id.users.append(user)
-            db.session.commit()
+            db.session.commit()  # type: ignore[attr-defined]
             flash(gettext("User {} edited.".format(user.username)), category='success')
             return redirect(url_for('admin_bp.edit_user', id=_id))
 
@@ -157,7 +300,7 @@ def edit_user():
         form.disabled.data = user.disabled
         # define list of preselect groups.
         groups = []
-        for g in user.flicket_groups:
+        for g in user.flicket_groups or []:  # type: ignore[operator]
             groups.append(g.id)
         form.groups.data = groups
     else:
@@ -188,8 +331,8 @@ def delete_user():
     if form.validate_on_submit():
         # delete the user.
         flash(gettext('Deleted user {}s'.format(user_details.username)), category='success')
-        db.session.delete(user_details)
-        db.session.commit()
+        db.session.delete(user_details)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
         return redirect(url_for('admin_bp.users'))
     # populate form with logged in user details
     form.id.data = g.user.id
@@ -209,8 +352,8 @@ def groups():
         add_group = FlicketGroup(
             group_name=form.group_name.data
         )
-        db.session.add(add_group)
-        db.session.commit()
+        db.session.add(add_group)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
         flash(gettext('New group "{}" added.'.format(form.group_name.data)), category='success')
         return redirect(url_for('admin_bp.groups'))
 
@@ -239,7 +382,7 @@ def admin_edit_group():
 
     if form.validate_on_submit():
         group.group_name = form.group_name.data
-        db.session.commit()
+        db.session.commit()  # type: ignore[attr-defined]
         flash(gettext('Group name changed to {}.'.format(group.group_name)), category='success')
         return redirect(url_for('admin_bp.groups'))
     form.group_name.data = group.group_name
@@ -265,8 +408,8 @@ def admin_delete_group():
     if form.validate_on_submit():
         # delete the group.
         flash(gettext('Deleted group {}s'.format(group_details.group_name)), category="info")
-        db.session.delete(group_details)
-        db.session.commit()
+        db.session.delete(group_details)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
         return redirect(url_for('admin_bp.groups'))
     # populate form with logged in user details
     form.id.data = g.user.id

@@ -20,12 +20,8 @@
                     <a class="dropdown-item" href="{{ url_for('flicket_bp.subscribed') }}" title="Tickets you are subscribed to.">{{ _('Subscribed') }}</a>
                 </div>
             </li>
-            <li class="nav-item"><a class="nav-link" href="{{ url_for('flicket_bp.tickets') }}">{{ _('Tickets') }}</a>
-            </li>
             <li class="nav-item"><a class="nav-link"
                                     href="{{ url_for('flicket_bp.ticket_create') }}">{{ _('Create Ticket') }}</a></li>
-            <li class="nav-item"><a class="nav-link"
-                                    href="{{ url_for('flicket_bp.flicket_users') }}">{{ _('Users') }}</a></li>
             {% if g.user.is_admin and not request.path.startswith('/flicket_admin') %}
                 <li class="nav-item"><a class="nav-link"
                                         href="{{ url_for('admin_bp.index') }}">{{ _('Admin View') }}</a></li>
