@@ -18,7 +18,6 @@ from application.flicket.models.flicket_user import FlicketUser
 from application.flicket.scripts.hash_password import hash_password
 from application.flicket_admin.views.view_admin import create_user
 from application.flicket.forms.flicket_forms import form_class_button
-from scripts.login_functions import nt_log_on
 
 
 def login_user_exist(form, field):

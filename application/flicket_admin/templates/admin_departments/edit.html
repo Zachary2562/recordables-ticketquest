@@ -1,0 +1,44 @@
+<!-- extend from base layout -->
+{% extends "flicket_base.html" %}
+{% block content %}
+    <!-- {{ self._TemplateReference__context.name }} -->
+    <div class="container">
+
+        {% include 'admin_menu.html' %}
+
+        <div class="row rounded border m-2 p-2 bg-white">
+            <div class="col">
+                <h2 class="text-center">{{ title }}</h2>
+            </div>
+        </div>
+
+        <div class="row border rounded m-2 p-2 bg-white">
+            <div class="col">
+                <form class="form" action="" method="post" name="department_form">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row mb-2">
+                        <label class="col-2 col-form-label">{{ form.department.label.text }}</label>
+                        <div class="col">
+                            {{ form.department(class="form-control", placeholder="department name") }}
+                        </div>
+                    </div>
+                    {% if form.department.errors %}
+                        <div class="alert alert-warning small">
+                            {% for error in form.department.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col text-center">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+{% endblock %} 

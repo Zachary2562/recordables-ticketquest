@@ -15,7 +15,7 @@ def set_flicket_config():
     config = FlicketConfig.query.first()
 
     app.config.update(
-        posts_per_page=config.posts_per_page,
+        posts_per_page=20,  # or whatever number you want
         allowed_extensions=config.allowed_extensions.split(', '),
         ticket_upload_folder=config.ticket_upload_folder,
         avatar_upload_folder=config.avatar_upload_folder,

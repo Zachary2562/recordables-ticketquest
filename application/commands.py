@@ -9,7 +9,6 @@ import time
 
 from sqlalchemy import or_
 
-from scripts.create_json import WriteConfigJson
 from application import db, app
 from application.flicket_admin.models.flicket_config import FlicketConfig
 from application.flicket.models.flicket_models import FlicketCategory

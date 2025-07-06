@@ -6,22 +6,21 @@
 /* color pallete http://paletton.com/#uid=20c0u0kqruf27Fv8XMB-SnVlsbX */
 /* color pallete http://paletton.com/#uid=20b0u0k2NvK02Yk0WJ55yre9mn7 */
 
-
 .flicket-button-link-white:hover, .flicket-button-link-white:link, .flicket-button-link-white:visited {
     color: white;
 }
 
 .btn-primary {
-    background-color: #0000b4;
-    border-color: #0000b4;
+    background-color: #28a8b2;
+    border-color: #28a8b2;
 }
 
 .btn-outline-primary {
-    border-color: #0000b4;
+    border-color: #28a8b2;
 }
 
 .active {
-    background-color: #0000b4;
+    background-color: #28a8b2;
 }
 
 body {
@@ -39,7 +38,7 @@ h1 {
 }
 
 .navbar-flicket {
-    border-bottom: 1px solid #F1592A;
+    border-bottom: 1px solid #28a8b2;
 }
 
 /*noinspection CssInvalidFunction*/
@@ -47,27 +46,27 @@ footer {
     font-size: 0.7rem;
     color: darkslategray;
     text-align: center;
-    border-top: solid 1px #F1592A;
+    border-top: solid 1px #28a8b2;
     padding: 0.4rem;
     margin-top: 2rem;
-    background: -moz-linear-gradient(left, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
-    background: -webkit-gradient(left top, right top, color-stop(0%, rgba(241, 86, 39, 1)), color-stop(61%, rgba(237, 187, 173, 1)), color-stop(100%, rgba(237, 187, 173, 1)));
-    background: -webkit-linear-gradient(left, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
-    background: -o-linear-gradient(left, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
-    background: -ms-linear-gradient(left, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
-    background: linear-gradient(to right, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
+    background: -moz-linear-gradient(left, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
+    background: -webkit-gradient(left top, right top, color-stop(0%, #28a8b2), color-stop(61%, #b0e4e7), color-stop(100%, #b0e4e7));
+    background: -webkit-linear-gradient(left, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
+    background: -o-linear-gradient(left, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
+    background: -ms-linear-gradient(left, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
+    background: linear-gradient(to right, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
 }
 
 header {
-    background: rgba(241, 86, 39, 1);
-    background: -moz-linear-gradient(left, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
+    background: #28a8b2;
+    background: -moz-linear-gradient(left, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
     /*noinspection CssInvalidFunction*/
-    background: -webkit-gradient(left top, right top, color-stop(0%, rgba(241, 86, 39, 1)), color-stop(61%, rgba(237, 187, 173, 1)), color-stop(100%, rgba(237, 187, 173, 1)));
-    background: -webkit-linear-gradient(left, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
-    background: -o-linear-gradient(left, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
-    background: -ms-linear-gradient(left, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
-    background: linear-gradient(to right, rgba(241, 86, 39, 1) 0%, rgba(237, 187, 173, 1) 61%, rgba(237, 187, 173, 1) 100%);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#f15627', endColorstr='#edbbad', GradientType=1);
+    background: -webkit-gradient(left top, right top, color-stop(0%, #28a8b2), color-stop(61%, #b0e4e7), color-stop(100%, #b0e4e7));
+    background: -webkit-linear-gradient(left, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
+    background: -o-linear-gradient(left, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
+    background: -ms-linear-gradient(left, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
+    background: linear-gradient(to right, #28a8b2 0%, #b0e4e7 61%, #b0e4e7 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#28a8b2', endColorstr='#b0e4e7', GradientType=1);
     color: white;
     padding: 10pt;
 }
@@ -86,7 +85,7 @@ input[type="radio"] {
 }
 
 .flicket-action {
-    background-color: rgba(254, 203, 190, 0.3);
+    background-color: rgba(40, 168, 178, 0.1); /* teal tint */
     font-size: 0.8rem;
 }
 
@@ -101,7 +100,6 @@ input[type="radio"] {
 .flicket-avatar-super {
     color: #0c5460;
 }
-
 
 .white_space {
     white-space: pre-wrap;
@@ -130,7 +128,7 @@ input[type="radio"] {
 
 .flicket-tickets-title {
     font-size: 0.8rem;
-    color: #659dca;
+    color: #28a8b2;
 }
 
 .flicket-tickets-content {
@@ -143,7 +141,6 @@ input[type="radio"] {
 
 .flicket-status-high {
     border-bottom: red solid 0.3rem;
-
 }
 
 .flicket-status-medium {
@@ -165,7 +162,6 @@ td {
 .flicket-top-buffer {
     margin-top: 20px;
 }
-
 
 .oi-flicket-cl-dg {
     fill: #000000;

@@ -1,0 +1,84 @@
+<!-- extend from base layout -->
+{% extends "flicket_base.html" %}
+
+{% block content %}
+    <!-- {{ self._TemplateReference__context.name }} -->
+    <div class="container">
+        {% include 'admin_menu.html' %}
+        <div class=" m-2 p-2 row border rounded bg-white">
+            <div class="col">
+                <h2>{{ title }}</h2>
+                <p>
+                    {{ _('Click on department name to edit.') }}
+                </p>
+            </div>
+        </div>
+        <ul class="m-2 pagination pagination-sm">{% for page in departments.iter_pages() %}
+            {% if page %}
+                {% if page != departments.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_bp.departments', page=page, **request.args) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item active">
+                        <a class="page-link" href="{{ url_for('admin_bp.departments', page=page, **request.args) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="">...</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+
+        <div class="row">
+            <div class="col">
+                {% for d in departments.items %}
+
+                    <div class="border rounded bg-white m-2 p-1 pl-3 pr-3">
+
+                        <div class="row">
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Department') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    {{ d.department }}
+                                    <a href="{{ url_for('admin_bp.edit_department', department_id=d.id) }}" title="{{ _('edit') }}">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Categories') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    {{ d.categories|length }}
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Delete Department') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    <a href="{{ url_for('admin_bp.delete_department', department_id=d.id) }}" title="{{ _('delete') }}">
+                                        <i class="fas fa-trash" style="color: red;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %} 

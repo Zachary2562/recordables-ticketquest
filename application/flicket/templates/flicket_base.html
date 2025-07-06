@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en-GB">
 <head>
-
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,8 +8,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>{{ g.application_title }}{% if title %} - {{ title }} {% endif %}</title>
-
+    <title>Recordables | TicketQuest™{% if title %} - {{ title }} {% endif %}</title>
 
     <link rel="stylesheet" href="{{ url_for('flicket_bp.static', filename='css/bootstrap.css') }}">
     <link rel="stylesheet" href="{{ url_for('flicket_bp.static', filename='css/flicket.css') }}">
@@ -42,10 +40,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col pt-5" style="font-size: 2rem">
-                {{ g.application_title }}
-                <span style="font-size: 0.8rem; color: #d5d2cf">
-                    {{ _('a simple ticket system') }}
-                </span>
+                Recordables | TicketQuest™
             </div>
         </div>
     </div>

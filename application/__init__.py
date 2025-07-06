@@ -67,6 +67,8 @@ from .flicket_admin.views import view_admin
 from .flicket_admin.views import view_config
 # noinspection PyPep8
 from .flicket_admin.views import view_email_test
+# noinspection PyPep8
+from .flicket_admin.views import admin_departments
 
 # noinspection PyPep8
 from .flicket.views import assign
