@@ -12,6 +12,7 @@ from wtforms import StringField, SelectField, HiddenField, SubmitField, FileFiel
 from wtforms.fields import SelectMultipleField
 from wtforms.validators import DataRequired, Length
 from wtforms.widgets import ListWidget, CheckboxInput
+from decimal import Decimal
 
 from application.flicket.models.flicket_models import field_size
 from application.flicket.models.flicket_models import FlicketCategory
@@ -47,7 +48,7 @@ def allowed_file_extension(form, field):
     for file in files:
         filename = file.filename
 
-        if '.' not in filename:
+        if filename is not None and '.' not in filename:
             field.errors.append(gettext('"{}" Is not a valid filename.'.format(filename)))
             return False
 
@@ -158,28 +159,26 @@ class CreateTicketForm(FlaskForm):
                                  c.department]
 
     """ Log in form. """
-    title = StringField(
-        lazy_gettext('username'),
-        validators=[
-            DataRequired(),
-            Length(
-                min=field_size['title_min_length'],
-                max=field_size['title_max_length']
-            )
-        ]
-    )
-    content = PageDownField(lazy_gettext('content'),
+    title = StringField(str(lazy_gettext('username')),
+                       validators=[
+                           DataRequired(),
+                           Length(
+                               min=field_size['title_min_length'],
+                               max=field_size['title_max_length']
+                           )
+                       ]
+                       )
+    content = PageDownField(str(lazy_gettext('content')),
                             validators=[DataRequired(), Length(min=field_size['content_min_length'],
-                                                               max=field_size[
-                                                                   'content_max_length'])])
-    priority = SelectField(lazy_gettext('priority'), validators=[DataRequired()], coerce=int)
-    category = SelectField(lazy_gettext('category'), validators=[DataRequired()], coerce=int)
-    file = FileField(lazy_gettext('Upload Documents'),
+                                                               max=field_size['content_max_length'])])
+    priority = SelectField(str(lazy_gettext('priority')), validators=[DataRequired()], coerce=int)
+    category = SelectField(str(lazy_gettext('category')), validators=[DataRequired()], coerce=int)
+    file = FileField(str(lazy_gettext('Upload Documents')),
                      validators=[allowed_file_extension],
                      render_kw={'multiple': True}
                      )
-    hours = DecimalField(lazy_gettext('hours'), default=0)
-    submit = SubmitField(lazy_gettext('Submit'), render_kw=form_class_button, validators=[DataRequired()])
+    hours = DecimalField(str(lazy_gettext('hours')), default=Decimal('0'))
+    submit = SubmitField(str(lazy_gettext('Submit')), render_kw=form_class_button, validators=[DataRequired()])
 
 
 class MultiCheckBoxField(SelectMultipleField):
@@ -189,7 +188,7 @@ class MultiCheckBoxField(SelectMultipleField):
 
 class EditTicketForm(CreateTicketForm):
     def __init__(self, ticket_id, *args, **kwargs):
-        self.form = super(EditTicketForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # get ticket data from ticket_id
         ticket = FlicketTicket.query.filter_by(id=ticket_id).first()
 
@@ -204,7 +203,7 @@ class EditTicketForm(CreateTicketForm):
             self.uploads.choices.append((x[0], uri_label))
 
     uploads = MultiCheckBoxField('Label', coerce=int)
-    submit = SubmitField(lazy_gettext('Edit Ticket'), render_kw=form_class_button, validators=[DataRequired()])
+    submit = SubmitField(str(lazy_gettext('Edit Ticket')), render_kw=form_class_button, validators=[DataRequired()])
 
 
 class ReplyForm(FlaskForm):
@@ -215,81 +214,82 @@ class ReplyForm(FlaskForm):
         self.status.choices = [(s.id, s.status) for s in FlicketStatus.query.filter(FlicketStatus.status != 'Closed')]
         self.priority.choices = [(p.id, p.priority) for p in FlicketPriority.query.all()]
 
-    content = PageDownField(lazy_gettext('Reply'),
+    content = PageDownField(str(lazy_gettext('Reply')),
                             validators=[DataRequired(), Length(min=field_size['content_min_length'],
                                                                max=field_size['content_max_length'])])
-    file = FileField(lazy_gettext('Add Files'), validators=[allowed_file_extension], render_kw={'multiple': True})
-    status = SelectField(lazy_gettext('Status'), validators=[DataRequired()], coerce=int)
-    priority = SelectField(lazy_gettext('Priority'), validators=[DataRequired()], coerce=int)
-    hours = DecimalField(lazy_gettext('hours'), default=0)
-    submit = SubmitField(lazy_gettext('reply'), render_kw=form_class_button)
-    submit_close = SubmitField(lazy_gettext('reply and close'), render_kw=form_danger_button)
+    file = FileField(str(lazy_gettext('Add Files')), validators=[allowed_file_extension], render_kw={'multiple': True})
+    status = SelectField(str(lazy_gettext('Status')), validators=[DataRequired()], coerce=int)
+    priority = SelectField(str(lazy_gettext('Priority')), validators=[DataRequired()], coerce=int)
+    hours = DecimalField(str(lazy_gettext('hours')), default=Decimal('0'))
+    submit = SubmitField(str(lazy_gettext('reply')), render_kw=form_class_button)
+    submit_close = SubmitField(str(lazy_gettext('reply and close')), render_kw=form_danger_button)
 
 
 class EditReplyForm(ReplyForm):
     def __init__(self, post_id, *args, **kwargs):
-        self.form = super(EditReplyForm, self).__init__(*args, **kwargs)
-        self.uploads.choices = generate_choices('Post', id=post_id)
+        super().__init__(*args, **kwargs)
+        choices = generate_choices('Post', id=post_id)
+        self.uploads.choices = choices if choices is not None else []
 
     uploads = MultiCheckBoxField('Label', coerce=int)
-    submit = SubmitField(lazy_gettext('Edit Reply'), render_kw=form_class_button, validators=[DataRequired()])
+    submit = SubmitField(str(lazy_gettext('Edit Reply')), render_kw=form_class_button, validators=[DataRequired()])
 
 
 class SearchUserForm(FlaskForm):
     """ Search user. """
-    username = StringField(lazy_gettext('username'),
+    username = StringField(str(lazy_gettext('username')),
                            validators=[
                                DataRequired(),
                                Length(min=user_field_size['username_min'], max=user_field_size['username_max']),
                                does_user_exist
                            ]
                            )
-    submit = SubmitField(lazy_gettext('find user'), render_kw=form_class_button)
+    submit = SubmitField(str(lazy_gettext('find user')), render_kw=form_class_button)
 
 
 class AssignUserForm(SearchUserForm):
     """ Search user. """
-    submit = SubmitField(lazy_gettext('assign user'), render_kw=form_class_button)
+    submit = SubmitField(str(lazy_gettext('assign user')), render_kw=form_class_button)
 
 
 class SubscribeUser(SearchUserForm):
     """ Search user. """
 
-    sub_user = SubmitField(lazy_gettext('subscribe user'), render_kw=form_class_button)
+    sub_user = SubmitField(str(lazy_gettext('subscribe user')), render_kw=form_class_button)
 
 
 class UnSubscribeUser(FlaskForm):
     """ Search user. """
-    username = HiddenField(lazy_gettext('username'), validators=[DataRequired()])
-    unsub_user = SubmitField(lazy_gettext('Unsubscribe user'), render_kw=form_class_button)
+    username = HiddenField(str(lazy_gettext('username')), validators=[DataRequired()])
+    unsub_user = SubmitField(str(lazy_gettext('Unsubscribe user')), render_kw=form_class_button)
 
 
 class DepartmentForm(FlaskForm):
     """ Department form. """
-    department = StringField(lazy_gettext('Department'),
+    department = StringField(str(lazy_gettext('Department')),
                              validators=[DataRequired(), Length(min=field_size['department_min_length'],
                                                                 max=field_size['department_max_length']),
                                          does_department_exist])
-    submit = SubmitField(lazy_gettext('add department'), render_kw=form_class_button)
+    submit = SubmitField(str(lazy_gettext('add department')), render_kw=form_class_button)
 
 
 class CategoryForm(FlaskForm):
     """ Category form. """
-    category = StringField(lazy_gettext('Category'),
+    category = StringField(str(lazy_gettext('Category')),
                            validators=[DataRequired(), Length(min=field_size['category_min_length'],
                                                               max=field_size['category_max_length']),
                                        does_category_exist])
     department_id = HiddenField('department_id')
-    submit = SubmitField(lazy_gettext('add category'), render_kw=form_class_button)
+    submit = SubmitField(str(lazy_gettext('add category')), render_kw=form_class_button)
 
 
 class SearchDepartmentCategoryForm(FlaskForm):
     """ Search department / category. """
-    department_category = StringField(lazy_gettext('Department / Category'),
+    department_category = StringField(str(lazy_gettext('Department / Category')),
                                       validators=[DataRequired(), does_unique_department_category_exist])
-    submit = SubmitField(lazy_gettext('search department / category'), render_kw=form_class_button)
+    submit = SubmitField(str(lazy_gettext('search department / category')), render_kw=form_class_button)
 
 
 class ChangeDepartmentCategoryForm(SearchDepartmentCategoryForm):
     """ Change department / category. """
-    submit = SubmitField(lazy_gettext('change department / category'), render_kw=form_class_button)
+    submit = SubmitField(str(lazy_gettext('change department / category')), render_kw=form_class_button)
