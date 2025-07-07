@@ -4,6 +4,7 @@
 # Flicket - copyright Paul Bourne: evereux@gmail.com
 
 import datetime
+import os
 
 from flask import flash
 from flask import g
@@ -25,10 +26,11 @@ from flask_principal import UserNeed
 from application import app, db
 from application.flicket.models.flicket_user import FlicketUser
 from application.flicket.models.flicket_user import FlicketGroup
-from application.flicket.models.flicket_models import FlicketTicket, FlicketPriority, FlicketStatus
+from application.flicket.models.flicket_models import FlicketTicket, FlicketPriority, FlicketStatus, FlicketUploads, FlicketPost, FlicketHistory
 from application.flicket.forms.search import SearchTicketForm
 from application.flicket.scripts.hash_password import hash_password
 from application.flicket_admin.forms.forms_admin import AddGroupForm, AddUserForm, EnterPasswordForm, EditUserForm, PriorityForm, StatusForm
+from application.flicket.forms.forms_main import ConfirmPassword
 from . import admin_bp
 
 principals = Principal(app)
@@ -515,3 +517,41 @@ def delete_status(status_id):
         return redirect(url_for('admin_bp.statuses'))
     notification = gettext('You are trying to delete status: %(value)s.', value=status.status.upper())
     return render_template('flicket_delete.html', notification=notification, title='Delete Status')
+
+# Admin delete ticket
+@admin_bp.route(app.config['ADMINHOME'] + 'delete_ticket/<int:ticket_id>/', methods=['GET', 'POST'])
+@login_required
+@admin_permission.require(http_exception=403)
+def delete_ticket(ticket_id):
+    form = ConfirmPassword()
+    ticket = FlicketTicket.query.filter_by(id=ticket_id).first()
+
+    if not ticket:
+        flash(gettext('Could not find ticket.'), category='warning')
+        return redirect(url_for('admin_bp.tickets'))
+
+    if form.validate_on_submit():
+        # delete images from database and folder
+        images = FlicketUploads.query.filter_by(topic_id=ticket_id)
+        for i in images:
+            try:
+                os.remove(os.path.join(os.getcwd(), app.config['ticket_upload_folder'] + '/' + i.file_name))
+            except Exception:
+                pass
+            db.session.delete(i)  # type: ignore[attr-defined]
+        # remove posts for ticket.
+        for post in ticket.posts:
+            # remove history
+            history = FlicketHistory.query.filter_by(post=post).all()
+            for h in history:
+                db.session.delete(h)  # type: ignore[attr-defined]
+            post.user.total_posts -= 1
+            db.session.delete(post)  # type: ignore[attr-defined]
+        user = ticket.user
+        user.total_posts -= 1
+        db.session.delete(ticket)  # type: ignore[attr-defined]
+        db.session.commit()  # type: ignore[attr-defined]
+        flash(gettext('Ticket deleted.'), category='success')
+        return redirect(url_for('admin_bp.tickets'))
+
+    return render_template('flicket_deletetopic.html', form=form, ticket=ticket, title='Delete Ticket')

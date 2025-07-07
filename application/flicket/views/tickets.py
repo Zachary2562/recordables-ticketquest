@@ -71,7 +71,8 @@ def tickets_view(page, is_my_view=False, subscribed=False):
                                                      user_id=user_id, content=content, assigned_id=assigned_id,
                                                      created_id=created_id)
     if is_my_view:
-        ticket_query = FlicketTicket.my_tickets(ticket_query)
+        if not g.user.is_admin:
+            ticket_query = FlicketTicket.my_tickets(ticket_query)
     ticket_query = FlicketTicket.sorted_tickets(ticket_query, sort)
 
     if subscribed:

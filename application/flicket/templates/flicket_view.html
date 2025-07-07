@@ -90,7 +90,8 @@
                         <div class="row">
                             <div class="col text-right">
                                 <a class="btn btn-outline-primary btn-xxs"
-                                   href="{{ url_for('flicket_bp.ticket_claim', ticket_id = ticket.id) }}">
+                                   href="{{ url_for('flicket_bp.ticket_claim', ticket_id = ticket.id) }}"
+                                   title="Claim: Take responsibility for this ticket. You will become the assigned user.">
                                     {{ _('claim') }}
                                 </a>
                             </div>
@@ -100,7 +101,8 @@
                         <div class="row">
                             <div class="col text-right">
                                 <a class="btn btn-outline-primary btn-xxs"
-                                   href="{{ url_for('flicket_bp.release', ticket_id = ticket.id) }}">
+                                   href="{{ url_for('flicket_bp.release', ticket_id = ticket.id) }}"
+                                   title="Release: Remove yourself as the assigned user. The ticket will become unassigned.">
                                     {{ _('release') }}
                                 </a>
                             </div>
@@ -108,7 +110,8 @@
                         <div class="row">
                             <div class="col text-right">
                                 <a class="btn btn-outline-primary btn-xxs"
-                                   href="{{ url_for('flicket_bp.ticket_assign', ticket_id = ticket.id) }}">
+                                   href="{{ url_for('flicket_bp.ticket_assign', ticket_id = ticket.id) }}"
+                                   title="Assign: Assign this ticket to a specific user.">
                                     {{ _('assign') }}
                                 </a>
                             </div>
@@ -144,7 +147,7 @@
                     <div class="btn btn-warning btn-sm">Invalid username.</div>
                 {% endif %}
                 <div class="col">
-                    {{ subscribers_form.sub_user(class="btn btn-primary btn-sm") }}
+                    <input class="btn btn-primary" type="submit" value="subscribe user" title="Subscribe user: Enter their username for them to receive emails about any major changes.">
                 </div>
             </form>
         </div>
