@@ -142,6 +142,8 @@ from .flicket_errors import handlers
 
 app.register_blueprint(admin_bp)
 app.register_blueprint(flicket_bp)
+from application.flicket.views.signup import signup_bp
+app.register_blueprint(signup_bp)
 app.register_blueprint(bp_api)
 app.register_blueprint(bp_errors)
 
