@@ -55,20 +55,23 @@
             </div>
         </div>
 
-        <!-- Quick Stats (if user has tickets) -->
-        {% if tickets.count() > 0 %}
+        <!-- Priority Tickets Sections -->
+        {% if urgent_tickets.count() > 0 or high_tickets.count() > 0 or medium_tickets.count() > 0 or low_tickets.count() > 0 %}
+        
+        <!-- Urgent Priority Tickets -->
+        {% if urgent_tickets.count() > 0 %}
         <div class="row m-2 p-3 border rounded bg-white">
             <div class="col">
                 <div class="row">
                     <div class="col text-center">
-                        <h2 class="text-warning">⚠️ High Priority Tickets</h2>
+                        <h2 class="text-danger">🚨 Urgent Priority Tickets</h2>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
-                        <div id="carouselExampleControls" class="carousel slide mt-3" data-ride="carousel">
+                        <div id="carouselUrgent" class="carousel slide mt-3" data-ride="carousel">
                             <div class="carousel-inner">
-                                {% for t in tickets %}
+                                {% for t in urgent_tickets %}
                                     <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
                                         {% include('flicket_items.html') %}
                                     </div>
@@ -79,6 +82,86 @@
                 </div>
             </div>
         </div>
+        {% endif %}
+
+        <!-- High Priority Tickets -->
+        {% if high_tickets.count() > 0 %}
+        <div class="row m-2 p-3 border rounded bg-white">
+            <div class="col">
+                <div class="row">
+                    <div class="col text-center">
+                        <h2 class="text-warning">⚠️ High Priority Tickets</h2>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div id="carouselHigh" class="carousel slide mt-3" data-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for t in high_tickets %}
+                                    <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
+                                        {% include('flicket_items.html') %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Medium Priority Tickets -->
+        {% if medium_tickets.count() > 0 %}
+        <div class="row m-2 p-3 border rounded bg-white">
+            <div class="col">
+                <div class="row">
+                    <div class="col text-center">
+                        <h2 class="text-info">ℹ️ Medium Priority Tickets</h2>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div id="carouselMedium" class="carousel slide mt-3" data-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for t in medium_tickets %}
+                                    <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
+                                        {% include('flicket_items.html') %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Low Priority Tickets -->
+        {% if low_tickets.count() > 0 %}
+        <div class="row m-2 p-3 border rounded bg-white">
+            <div class="col">
+                <div class="row">
+                    <div class="col text-center">
+                        <h2 class="text-success">✅ Low Priority Tickets</h2>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div id="carouselLow" class="carousel slide mt-3" data-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for t in low_tickets %}
+                                    <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
+                                        {% include('flicket_items.html') %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         {% endif %}
 
     </div>
