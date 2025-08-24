@@ -254,7 +254,7 @@
                                     {{ _('status') }}
                                 </div>
                                 <div class="flicket-tickets-content">
-                                    <span class="badge {% if t.current_status.status == 'Open' %}badge-success{% elif t.current_status.status == 'Closed' %}badge-secondary{% else %}badge-warning{% endif %}">
+                                    <span class="badge {% if t.current_status.status == 'Open' %}badge-success{% elif t.current_status.status == 'Closed' %}badge-danger{% else %}badge-warning{% endif %}">
                                         {{ t.current_status.status }}
                                     </span>
                                 </div>

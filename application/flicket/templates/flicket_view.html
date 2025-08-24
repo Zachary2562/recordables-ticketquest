@@ -26,17 +26,21 @@
                     <div class="col-md-2 col-6">
                         <div class="flicket-tickets-title">{{ _('priority') }}</div>
                         <div class="flicket-tickets-content
-                        {%- if ticket.current_status.status == 'Closed' %}
+                        {%- if ticket.current_status and ticket.current_status.status == 'Closed' %}
                             flicket-status-closed
                         {%- endif %}
-                        {%- if ticket.ticket_priority.priority == 'high' %}
+                        {%- if ticket.ticket_priority and ticket.ticket_priority.priority == 'high' %}
                             flicket-status-high
-                        {% elif ticket.ticket_priority.priority == 'medium' %}
+                        {% elif ticket.ticket_priority and ticket.ticket_priority.priority == 'medium' %}
                             flicket-status-medium
-                        {% elif ticket.ticket_priority.priority == 'low' %}
+                        {% elif ticket.ticket_priority and ticket.ticket_priority.priority == 'low' %}
                             flicket-status-low
                         {% endif %}">
-                            {{ ticket.ticket_priority.priority }}
+                            {% if ticket.ticket_priority %}
+                                {{ ticket.ticket_priority.priority }}
+                            {% else %}
+                                No Priority
+                            {% endif %}
                         </div>
                     </div>
                     <div class="col-md-2 col-6">
@@ -55,7 +59,15 @@
                     </div>
                     <div class="col-md-2 col-6">
                         <div class="flicket-tickets-title">{{ _('status') }}</div>
-                        <div class="flicket-tickets-content">{{ ticket.current_status.status }}</div>
+                        <div class="flicket-tickets-content">
+                            {% if ticket.current_status %}
+                                <span class="badge {% if ticket.current_status.status == 'Open' %}badge-success{% elif ticket.current_status.status == 'Closed' %}badge-danger{% else %}badge-warning{% endif %}">
+                                    {{ ticket.current_status.status }}
+                                </span>
+                            {% else %}
+                                <span class="badge badge-secondary">No Status</span>
+                            {% endif %}
+                        </div>
                     </div>
                     <div class="col-md-2 col-6">
                         <div class="flicket-tickets-title">{{ _('department / category') }}</div>
@@ -74,7 +86,7 @@
             <div class="col">
                 <div class="row">
                     <div class="col-auto">
-                        {% if ticket.current_status.status != 'Closed' %}
+                        {% if not ticket.current_status or ticket.current_status.status != 'Closed' %}
                             {% if ticket.assigned == g.user %}
                                 <a href="{{ url_for('flicket_bp.release', ticket_id=ticket.id) }}"
                                    class="btn btn-warning btn-sm">{{ _('release') }}</a>
@@ -85,7 +97,7 @@
                         {% endif %}
                     </div>
                     <div class="col-auto">
-                        {% if ticket.current_status.status != 'Closed' %}
+                        {% if not ticket.current_status or ticket.current_status.status != 'Closed' %}
                             <a href="{{ url_for('flicket_bp.ticket_assign', ticket_id=ticket.id) }}"
                                class="btn btn-info btn-sm">{{ _('assign') }}</a>
                         {% endif %}
@@ -103,7 +115,15 @@
         <div class="row m-2 p-3 border rounded bg-white">
             <div class="col">
                 <h2>#{{ ticket.id_zfill }} — {{ ticket.title }}</h2>
-                <p class="text-muted">Status: <strong>{{ ticket.current_status.status }}</strong></p>
+                <p class="text-muted">Status: <strong>
+                    {% if ticket.current_status %}
+                        <span class="badge {% if ticket.current_status.status == 'Open' %}badge-success{% elif ticket.current_status.status == 'Closed' %}badge-danger{% else %}badge-warning{% endif %}">
+                            {{ ticket.current_status.status }}
+                        </span>
+                    {% else %}
+                        <span class="badge badge-secondary">No Status</span>
+                    {% endif %}
+                </strong></p>
                 <p class="text-muted">Category: {{ ticket.category.category }} · Department: {{ ticket.category.department.department }}</p>
             </div>
         </div>

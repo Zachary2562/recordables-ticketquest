@@ -99,7 +99,7 @@ def ticket_view(ticket_id, page=1):
             upload_attachments.populate_db(new_reply)
 
             # change ticket status to open if closed.
-            if ticket.current_status.status.lower() == 'closed':
+            if ticket.current_status and ticket.current_status.status.lower() == 'closed':
                 ticket_open = FlicketStatus.query.filter_by(status='Open').first()
                 ticket.current_status = ticket_open
 
