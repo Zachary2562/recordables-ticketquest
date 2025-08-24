@@ -5,30 +5,80 @@
     <!-- {{ self._TemplateReference__context.name }} -->
     <div class="container">
         {% include 'admin_menu.html' %}
-        <div class="container mt-4">
-            <h2>Priorities</h2>
-            <a href="{{ url_for('admin_bp.add_priority') }}" class="btn btn-primary mb-2">Add Priority</a>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Priority</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for priority in priorities.items %}
-                    <tr>
-                        <td>{{ priority.id }}</td>
-                        <td>{{ priority.priority }}</td>
-                        <td>
-                            <a href="{{ url_for('admin_bp.edit_priority', priority_id=priority.id) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="{{ url_for('admin_bp.delete_priority', priority_id=priority.id) }}" class="btn btn-sm btn-danger">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class=" m-2 p-2 row border rounded bg-white">
+            <div class="col">
+                <h2>{{ title }}</h2>
+                <p>
+                    {{ _('Click on priority name to edit.') }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Add Priority Form -->
+        <div class=" m-2 p-2 row border rounded bg-white">
+            <div class="col">
+                <h3>{{ _('Add Priority') }}</h3>
+                <a href="{{ url_for('admin_bp.add_priority') }}" class="btn btn-primary">Add Priority</a>
+            </div>
+        </div>
+
+        <ul class="m-2 pagination pagination-sm">{% for page in priorities.iter_pages() %}
+            {% if page %}
+                {% if page != priorities.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_bp.priorities', page=page, **request.args) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item active">
+                        <a class="page-link" href="{{ url_for('admin_bp.priorities', page=page, **request.args) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="">...</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+
+        <div class="row">
+            <div class="col">
+                {% for priority in priorities.items %}
+
+                    <div class="border rounded bg-white m-2 p-1 pl-3 pr-3">
+
+                        <div class="row">
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Priority') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    {{ priority.priority }}
+                                    <a href="{{ url_for('admin_bp.edit_priority', priority_id=priority.id) }}" title="{{ _('edit') }}">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Delete Priority') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    <a href="{{ url_for('admin_bp.delete_priority', priority_id=priority.id) }}" title="{{ _('delete') }}">
+                                        <i class="fas fa-trash" style="color: red;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 {% endblock %} 

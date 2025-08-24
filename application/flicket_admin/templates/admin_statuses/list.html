@@ -5,30 +5,80 @@
     <!-- {{ self._TemplateReference__context.name }} -->
     <div class="container">
         {% include 'admin_menu.html' %}
-        <div class="container mt-4">
-            <h2>Statuses</h2>
-            <a href="{{ url_for('admin_bp.add_status') }}" class="btn btn-primary mb-2">Add Status</a>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for status in statuses.items %}
-                    <tr>
-                        <td>{{ status.id }}</td>
-                        <td>{{ status.status }}</td>
-                        <td>
-                            <a href="{{ url_for('admin_bp.edit_status', status_id=status.id) }}" class="btn btn-sm btn-warning">Edit</a>
-                            <a href="{{ url_for('admin_bp.delete_status', status_id=status.id) }}" class="btn btn-sm btn-danger">Delete</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class=" m-2 p-2 row border rounded bg-white">
+            <div class="col">
+                <h2>{{ title }}</h2>
+                <p>
+                    {{ _('Click on status name to edit.') }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Add Status Form -->
+        <div class=" m-2 p-2 row border rounded bg-white">
+            <div class="col">
+                <h3>{{ _('Add Status') }}</h3>
+                <a href="{{ url_for('admin_bp.add_status') }}" class="btn btn-primary">Add Status</a>
+            </div>
+        </div>
+
+        <ul class="m-2 pagination pagination-sm">{% for page in statuses.iter_pages() %}
+            {% if page %}
+                {% if page != statuses.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_bp.statuses', page=page, **request.args) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item active">
+                        <a class="page-link" href="{{ url_for('admin_bp.statuses', page=page, **request.args) }}">
+                            {{ page }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="">...</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        </ul>
+
+        <div class="row">
+            <div class="col">
+                {% for status in statuses.items %}
+
+                    <div class="border rounded bg-white m-2 p-1 pl-3 pr-3">
+
+                        <div class="row">
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Status') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    {{ status.status }}
+                                    <a href="{{ url_for('admin_bp.edit_status', status_id=status.id) }}" title="{{ _('edit') }}">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Delete Status') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    <a href="{{ url_for('admin_bp.delete_status', status_id=status.id) }}" title="{{ _('delete') }}">
+                                        <i class="fas fa-trash" style="color: red;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 {% endblock %} 
