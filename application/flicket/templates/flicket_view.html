@@ -141,7 +141,15 @@
         <!-- Reply Form -->
         <div class="row m-2 p-3 border rounded bg-white">
             <div class="col">
-                <h4>Add a Reply</h4>
+                {% if g.user.is_admin or g.user.is_super_user %}
+                    <h4>Add a Reply</h4>
+                {% else %}
+                    {% if replies.items %}
+                        <h4>Add a Reply</h4>
+                    {% else %}
+                        <h4>Add a Follow-up</h4>
+                    {% endif %}
+                {% endif %}
                 {% include('flicket_form_reply.html') %}
             </div>
         </div>

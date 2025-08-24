@@ -10,7 +10,7 @@ from flask_pagedown.fields import PageDownField
 from flask_wtf import FlaskForm
 from wtforms import StringField, SelectField, HiddenField, SubmitField, FileField, DecimalField
 from wtforms.fields import SelectMultipleField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import DataRequired, Length, ValidationError
 from wtforms.widgets import ListWidget, CheckboxInput
 from decimal import Decimal
 
@@ -149,6 +149,23 @@ def does_unique_department_category_exist(form, field):
     return True
 
 
+def optional_admin_field(form, field):
+    """
+    Custom validator that only validates if the user is an admin
+    """
+    from flask import g
+    # If user is not admin, don't validate this field
+    if not (hasattr(g, 'user') and (g.user.is_admin or g.user.is_super_user)):
+        return True
+    # If field is empty and user is not admin, that's fine
+    if not field.data or field.data == '':
+        return True
+    # For admin users, validate that the choice is valid
+    if field.data not in [choice[0] for choice in field.choices]:
+        raise ValidationError('Not a valid choice.')
+    return True
+
+
 class CreateTicketForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         form = super(CreateTicketForm, self).__init__(*args, **kwargs)
@@ -211,15 +228,19 @@ class ReplyForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         form = super(ReplyForm, self).__init__(*args, **kwargs)
-        self.status.choices = [(s.id, s.status) for s in FlicketStatus.query.filter(FlicketStatus.status != 'Closed')]
-        self.priority.choices = [(p.id, p.priority) for p in FlicketPriority.query.all()]
+        # Add empty choice for non-admin users
+        status_choices = [('', 'Select Status')] + [(s.id, s.status) for s in FlicketStatus.query.filter(FlicketStatus.status != 'Closed')]
+        priority_choices = [('', 'Select Priority')] + [(p.id, p.priority) for p in FlicketPriority.query.all()]
+        
+        self.status.choices = status_choices
+        self.priority.choices = priority_choices
 
     content = PageDownField(str(lazy_gettext('Reply')),
                             validators=[DataRequired(), Length(min=field_size['content_min_length'],
                                                                max=field_size['content_max_length'])])
     file = FileField(str(lazy_gettext('Add Files')), validators=[allowed_file_extension], render_kw={'multiple': True})
-    status = SelectField(str(lazy_gettext('Status')), validators=[DataRequired()], coerce=int)
-    priority = SelectField(str(lazy_gettext('Priority')), validators=[DataRequired()], coerce=int)
+    status = SelectField(str(lazy_gettext('Status')), validators=[optional_admin_field], default='')  # Custom validator for admin-only
+    priority = SelectField(str(lazy_gettext('Priority')), validators=[optional_admin_field], default='')  # Custom validator for admin-only
     hours = DecimalField(str(lazy_gettext('hours')), default=Decimal('0'))
     submit = SubmitField(str(lazy_gettext('reply')), render_kw=form_class_button)
     submit_close = SubmitField(str(lazy_gettext('reply and close')), render_kw=form_danger_button)

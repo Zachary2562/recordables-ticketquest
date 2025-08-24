@@ -62,68 +62,80 @@ def ticket_view(ticket_id, page=1):
         return redirect(url_for('flicket_bp.ticket_view', ticket_id=ticket_id))
 
     # add reply post
-    if (form.submit.data or form.submit_close.data) and form.validate_on_submit():
-        # upload file if user has selected one and the file is in accepted list of
-        files = request.files.getlist("file")
-        upload_attachments = UploadAttachment(files)
-        if upload_attachments.are_attachments():
-            upload_attachments.upload_files()
+    if (form.submit.data or form.submit_close.data):
+        if form.validate_on_submit():
+            # Form is valid, proceed with reply
+            # upload file if user has selected one and the file is in accepted list of
+            files = request.files.getlist("file")
+            upload_attachments = UploadAttachment(files)
+            if upload_attachments.are_attachments():
+                upload_attachments.upload_files()
 
-        new_reply = FlicketPost(
-            ticket=ticket,
-            user=g.user,
-            date_added=datetime.datetime.now(),
-            content=form.content.data,
-            hours=form.hours.data,
-        )
-
-        if ticket.status_id != form.status.data:
-            status = FlicketStatus.query.get(form.status.data)
-            ticket.current_status = status
-            add_action(ticket, 'status', data={'status_id': status.id, 'status': status.status})
-
-        if ticket.ticket_priority_id != form.priority.data:
-            priority = FlicketPriority.query.get(form.priority.data)
-            ticket.ticket_priority = priority
-            add_action(ticket, 'priority', data={'priority_id': priority.id, 'priority': priority.priority})
-
-        db.session.add(new_reply)
-
-        # add files to database.
-        upload_attachments.populate_db(new_reply)
-
-        # change ticket status to open if closed.
-        if ticket.current_status.status.lower() == 'closed':
-            ticket_open = FlicketStatus.query.filter_by(status='Open').first()
-            ticket.current_status = ticket_open
-
-        # subscribe to the ticket
-        if not ticket.is_subscribed(g.user):
-            subscribe = FlicketSubscription(
+            new_reply = FlicketPost(
                 ticket=ticket,
-                user=g.user
+                user=g.user,
+                date_added=datetime.datetime.now(),
+                content=form.content.data,
+                hours=form.hours.data,
             )
-            db.session.add(subscribe)
 
-        # add count of 1 to users total posts.
-        g.user.total_posts += 1
+            # Only update status if form has status data (admin users) and it's different
+            if form.status.data and form.status.data != '' and ticket.status_id != int(form.status.data):
+                status = FlicketStatus.query.get(int(form.status.data))
+                if status:
+                    ticket.current_status = status
+                    add_action(ticket, 'status', data={'status_id': status.id, 'status': status.status})
 
-        ticket.last_updated = datetime.datetime.now()
+            # Only update priority if form has priority data (admin users) and it's different
+            if form.priority.data and form.priority.data != '' and ticket.ticket_priority_id != int(form.priority.data):
+                priority = FlicketPriority.query.get(int(form.priority.data))
+                if priority:
+                    ticket.ticket_priority = priority
+                    add_action(ticket, 'priority', data={'priority_id': priority.id, 'priority': priority.priority})
 
-        db.session.commit()
+            db.session.add(new_reply)
 
-        # send email notification
-        mail = FlicketMail()
-        mail.reply_ticket(ticket=ticket, reply=new_reply, user=g.user)
+            # add files to database.
+            upload_attachments.populate_db(new_reply)
 
-        flash(gettext('You have replied to ticket %(value_1)s: %(value_2)s.', value_1=ticket.id_zfill,
-                      value_2=ticket.title), category="success")
+            # change ticket status to open if closed.
+            if ticket.current_status.status.lower() == 'closed':
+                ticket_open = FlicketStatus.query.filter_by(status='Open').first()
+                ticket.current_status = ticket_open
 
-        # if the reply has been submitted for closure.
-        if form.submit_close.data:
-            return redirect(url_for('flicket_bp.change_status', ticket_id=ticket.id, status='Closed'))
+            # subscribe to the ticket
+            if not ticket.is_subscribed(g.user):
+                subscribe = FlicketSubscription(
+                    ticket=ticket,
+                    user=g.user
+                )
+                db.session.add(subscribe)
 
-        return redirect(url_for('flicket_bp.ticket_view', ticket_id=ticket_id))
+            # add count of 1 to users total posts.
+            g.user.total_posts += 1
+
+            ticket.last_updated = datetime.datetime.now()
+
+            db.session.commit()
+
+            # send email notification
+            mail = FlicketMail()
+            mail.reply_ticket(ticket=ticket, reply=new_reply, user=g.user)
+
+            flash(gettext('You have replied to ticket %(value_1)s: %(value_2)s.', value_1=ticket.id_zfill,
+                          value_2=ticket.title), category="success")
+
+            # if the reply has been submitted for closure.
+            if form.submit_close.data:
+                return redirect(url_for('flicket_bp.change_status', ticket_id=ticket.id, status='Closed'))
+
+            return redirect(url_for('flicket_bp.ticket_view', ticket_id=ticket_id))
+        else:
+            # Form validation failed, show errors
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f'Form error in {field}: {error}', category='warning')
+            return redirect(url_for('flicket_bp.ticket_view', ticket_id=ticket_id))
 
     # get post id and populate contents for auto quoting
     if post_id:
@@ -143,8 +155,10 @@ def ticket_view(ticket_id, page=1):
 
     replies = replies.paginate(page=page, per_page=app.config['posts_per_page'])
 
-    form.status.data = ticket.status_id
-    form.priority.data = ticket.ticket_priority_id
+    # Set default values for admin users, but don't set for regular users
+    if g.user.is_admin or g.user.is_super_user:
+        form.status.data = ticket.status_id
+        form.priority.data = ticket.ticket_priority_id
 
     title = f"Ticket #{ticket.id_zfill} {ticket.title}"
 
