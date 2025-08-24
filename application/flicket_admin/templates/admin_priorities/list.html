@@ -1,28 +1,34 @@
-{% extends "admin.html" %}
+<!-- extend from base layout -->
+{% extends "flicket_base.html" %}
+
 {% block content %}
-    <div class="container mt-4">
-        <h2>Priorities</h2>
-        <a href="{{ url_for('admin_bp.add_priority') }}" class="btn btn-primary mb-2">Add Priority</a>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Priority</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for priority in priorities.items %}
-                <tr>
-                    <td>{{ priority.id }}</td>
-                    <td>{{ priority.priority }}</td>
-                    <td>
-                        <a href="{{ url_for('admin_bp.edit_priority', priority_id=priority.id) }}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{{ url_for('admin_bp.delete_priority', priority_id=priority.id) }}" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- {{ self._TemplateReference__context.name }} -->
+    <div class="container">
+        {% include 'admin_menu.html' %}
+        <div class="container mt-4">
+            <h2>Priorities</h2>
+            <a href="{{ url_for('admin_bp.add_priority') }}" class="btn btn-primary mb-2">Add Priority</a>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Priority</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for priority in priorities.items %}
+                    <tr>
+                        <td>{{ priority.id }}</td>
+                        <td>{{ priority.priority }}</td>
+                        <td>
+                            <a href="{{ url_for('admin_bp.edit_priority', priority_id=priority.id) }}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{{ url_for('admin_bp.delete_priority', priority_id=priority.id) }}" class="btn btn-sm btn-danger">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 {% endblock %} 
