@@ -6,11 +6,52 @@
 from flask import render_template, g
 from flask_login import login_required
 from sqlalchemy import and_
+from datetime import datetime
 
 from . import flicket_bp
-from application import app
+from application import app, db
 from application.flicket.scripts.pie_charts import create_pie_chart_dict
 from application.flicket.models.flicket_models import FlicketTicket, FlicketStatus, FlicketPriority
+
+
+# Create a mock ticket class to avoid SQLAlchemy datetime parsing issues
+class MockTicket:
+    def __init__(self, data):
+        self.id = data['id']
+        self.title = data['title']
+        self.content = data['content']
+        self.date_added = data['date_added']
+        self.num_replies = data.get('num_replies', 0)
+        self.total_hours = data.get('total_hours', 0)
+        self.id_zfill = str(data['id']).zfill(5)
+        
+        # Mock relationships
+        self.user = MockUser(data.get('user_name', 'Unknown'))
+        self.category = MockCategory(data.get('dept_name', 'Unknown'), data.get('cat_name', 'Unknown'))
+        self.ticket_priority = MockPriority(data.get('priority_name', 'Unknown'))
+        self.current_status = MockStatus(data.get('status_name', 'Unknown'))
+        self.assigned = MockUser(data.get('assigned_name', 'Unassigned'))
+
+class MockUser:
+    def __init__(self, name):
+        self.name = name
+
+class MockCategory:
+    def __init__(self, dept_name, cat_name):
+        self.department = MockDepartment(dept_name)
+        self.category = cat_name
+
+class MockDepartment:
+    def __init__(self, name):
+        self.department = name
+
+class MockPriority:
+    def __init__(self, name):
+        self.priority = name
+
+class MockStatus:
+    def __init__(self, name):
+        self.status = name
 
 
 # view users
@@ -20,47 +61,88 @@ def index():
     """ View showing flicket main page. We use this to display some statistics."""
     days = 7
 
-    # Get tickets for each priority level in ranked order (Urgent, High, Medium, Low)
-    # Filter out tickets with problematic date values
+    # Get tickets for each priority level using raw SQL to avoid datetime parsing issues
     try:
-        urgent_tickets = FlicketTicket.query.filter(
-            and_(
-                FlicketTicket.ticket_priority_id == 4,
-                FlicketTicket.status_id == 1,
-                FlicketTicket.date_added.isnot(None)
-            )
-        ).limit(100)
+        # Use raw SQL to get all ticket data
+        urgent_result = db.session.execute("""
+            SELECT t.id, t.title, t.content, t.date_added, 
+                   u.name as user_name, d.department as dept_name, c.category as cat_name,
+                   p.priority as priority_name, s.status as status_name,
+                   au.name as assigned_name
+            FROM flicket_topic t
+            LEFT JOIN flicket_users u ON t.started_id = u.id
+            LEFT JOIN flicket_category c ON t.category_id = c.id
+            LEFT JOIN flicket_department d ON c.department_id = d.id
+            LEFT JOIN flicket_priorities p ON t.ticket_priority_id = p.id
+            LEFT JOIN flicket_status s ON t.status_id = s.id
+            LEFT JOIN flicket_users au ON t.assigned_id = au.id
+            WHERE t.ticket_priority_id = 4 AND t.status_id = 1 AND t.date_added IS NOT NULL
+            ORDER BY t.id DESC
+            LIMIT 100
+        """)
+        urgent_tickets = [MockTicket(dict(row)) for row in urgent_result]
         
-        high_tickets = FlicketTicket.query.filter(
-            and_(
-                FlicketTicket.ticket_priority_id == 3,
-                FlicketTicket.status_id == 1,
-                FlicketTicket.date_added.isnot(None)
-            )
-        ).limit(100)
+        high_result = db.session.execute("""
+            SELECT t.id, t.title, t.content, t.date_added, 
+                   u.name as user_name, d.department as dept_name, c.category as cat_name,
+                   p.priority as priority_name, s.status as status_name,
+                   au.name as assigned_name
+            FROM flicket_topic t
+            LEFT JOIN flicket_users u ON t.started_id = u.id
+            LEFT JOIN flicket_category c ON t.category_id = c.id
+            LEFT JOIN flicket_department d ON c.department_id = d.id
+            LEFT JOIN flicket_priorities p ON t.ticket_priority_id = p.id
+            LEFT JOIN flicket_status s ON t.status_id = s.id
+            LEFT JOIN flicket_users au ON t.assigned_id = au.id
+            WHERE t.ticket_priority_id = 3 AND t.status_id = 1 AND t.date_added IS NOT NULL
+            ORDER BY t.id DESC
+            LIMIT 100
+        """)
+        high_tickets = [MockTicket(dict(row)) for row in high_result]
         
-        medium_tickets = FlicketTicket.query.filter(
-            and_(
-                FlicketTicket.ticket_priority_id == 2,
-                FlicketTicket.status_id == 1,
-                FlicketTicket.date_added.isnot(None)
-            )
-        ).limit(100)
+        medium_result = db.session.execute("""
+            SELECT t.id, t.title, t.content, t.date_added, 
+                   u.name as user_name, d.department as dept_name, c.category as cat_name,
+                   p.priority as priority_name, s.status as status_name,
+                   au.name as assigned_name
+            FROM flicket_topic t
+            LEFT JOIN flicket_users u ON t.started_id = u.id
+            LEFT JOIN flicket_category c ON t.category_id = c.id
+            LEFT JOIN flicket_department d ON c.department_id = d.id
+            LEFT JOIN flicket_priorities p ON t.ticket_priority_id = p.id
+            LEFT JOIN flicket_status s ON t.status_id = s.id
+            LEFT JOIN flicket_users au ON t.assigned_id = au.id
+            WHERE t.ticket_priority_id = 2 AND t.status_id = 1 AND t.date_added IS NOT NULL
+            ORDER BY t.id DESC
+            LIMIT 100
+        """)
+        medium_tickets = [MockTicket(dict(row)) for row in medium_result]
         
-        low_tickets = FlicketTicket.query.filter(
-            and_(
-                FlicketTicket.ticket_priority_id == 1,
-                FlicketTicket.status_id == 1,
-                FlicketTicket.date_added.isnot(None)
-            )
-        ).limit(100)
+        low_result = db.session.execute("""
+            SELECT t.id, t.title, t.content, t.date_added, 
+                   u.name as user_name, d.department as dept_name, c.category as cat_name,
+                   p.priority as priority_name, s.status as status_name,
+                   au.name as assigned_name
+            FROM flicket_topic t
+            LEFT JOIN flicket_users u ON t.started_id = u.id
+            LEFT JOIN flicket_category c ON t.category_id = c.id
+            LEFT JOIN flicket_department d ON c.department_id = d.id
+            LEFT JOIN flicket_priorities p ON t.ticket_priority_id = p.id
+            LEFT JOIN flicket_status s ON t.status_id = s.id
+            LEFT JOIN flicket_users au ON t.assigned_id = au.id
+            WHERE t.ticket_priority_id = 1 AND t.status_id = 1 AND t.date_added IS NOT NULL
+            ORDER BY t.id DESC
+            LIMIT 100
+        """)
+        low_tickets = [MockTicket(dict(row)) for row in low_result]
+        
     except Exception as e:
         # If there's an error with the query, return empty results
         print(f"Error querying tickets: {e}")
-        urgent_tickets = FlicketTicket.query.filter_by(id=0)  # Empty query
-        high_tickets = FlicketTicket.query.filter_by(id=0)    # Empty query
-        medium_tickets = FlicketTicket.query.filter_by(id=0)  # Empty query
-        low_tickets = FlicketTicket.query.filter_by(id=0)     # Empty query
+        urgent_tickets = []
+        high_tickets = []
+        medium_tickets = []
+        low_tickets = []
 
     # PIE CHARTS
     ids, graph_json = create_pie_chart_dict()
@@ -69,9 +151,8 @@ def index():
     open_count = 0
     if g.user.is_admin or g.user.is_super_user:
         try:
-            open_status = FlicketStatus.query.filter_by(status='Open').first()
-            if open_status:
-                open_count = FlicketTicket.query.filter_by(status_id=open_status.id).count()
+            result = db.session.execute("SELECT COUNT(*) FROM flicket_topic WHERE status_id = 1")
+            open_count = result.fetchone()[0]
         except Exception as e:
             print(f"Error calculating open count: {e}")
             open_count = 0
