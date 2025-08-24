@@ -49,7 +49,15 @@
                 {{ _('date') }}
             </div>
             <div class="flicket-tickets-content">
-                {{ t.date_added.strftime('%Y-%m-%d') }}
+                {% if t.date_added %}
+                    {% if t.date_added is string %}
+                        {{ t.date_added }}
+                    {% else %}
+                        {{ t.date_added.strftime('%Y-%m-%d') }}
+                    {% endif %}
+                {% else %}
+                    No Date
+                {% endif %}
             </div>
         </div>
         <div class="col-md-3 col-6">
