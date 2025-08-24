@@ -11,24 +11,28 @@
 
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownn" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">My Tickets</a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdownn">
-                    {% if g.user.is_admin %}
-                        <a class="dropdown-item" href="{{ url_for('flicket_bp.my_tickets') }}" title="Tickets assigned to or started by you.">{{ _('My Tickets') }}</a>
-                        <a class="dropdown-item" href="{{ url_for('flicket_bp.my_tickets', created_id=g.user.id) }}" title="Tickets started by you.">{{ _('Created') }}</a>
-                        <a class="dropdown-item" href="{{ url_for('flicket_bp.my_tickets', assigned_id=g.user.id) }}" title="Tickets assigned to you.">{{ _('Assigned') }}</a>
-                        <a class="dropdown-item" href="{{ url_for('flicket_bp.subscribed') }}" title="Tickets you are subscribed to.">{{ _('Subscribed') }}</a>
-                    {% else %}
-                        <a class="dropdown-item" href="{{ url_for('flicket_bp.my_tickets') }}" title="Your tickets.">{{ _('My Tickets') }}</a>
-                    {% endif %}
-                </div>
+            {% if g.user.is_admin %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('flicket_bp.my_tickets', assigned_id=g.user.id) }}" title="Tickets assigned to you.">{{ _('Assigned') }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('flicket_bp.subscribed') }}" title="Tickets you are subscribed to.">{{ _('Subscribed') }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('flicket_bp.my_tickets') }}" title="All your tickets.">{{ _('All Tickets') }}</a>
+                </li>
+            {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('flicket_bp.my_tickets') }}" title="Your tickets.">{{ _('My Tickets') }}</a>
+                </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('flicket_bp.ticket_create') }}">{{ _('Create Ticket') }}</a>
             </li>
-            <li class="nav-item"><a class="nav-link"
-                                    href="{{ url_for('flicket_bp.ticket_create') }}">{{ _('Create Ticket') }}</a></li>
-            {% if g.user.is_admin and not request.path.startswith('/flicket_admin') %}
-                <li class="nav-item"><a class="nav-link"
-                                        href="{{ url_for('admin_bp.index') }}">{{ _('Admin View') }}</a></li>
+            {% if g.user.is_admin %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_bp.index') }}">{{ _('Admin View') }}</a>
+                </li>
             {% endif %}
         </ul>
 

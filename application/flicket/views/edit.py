@@ -38,7 +38,7 @@ def edit_ticket(ticket_id):
         return redirect(url_for('flicket_bp.flicket_main'))
 
     # check to see if topic is closed. ticket can't be edited once it's closed.
-    if is_ticket_closed(ticket.current_status.status):
+    if ticket.current_status and is_ticket_closed(ticket.current_status.status):
         return redirect(url_for('flicket_bp.ticket_view', ticket_id=ticket.id))
 
     # check user is authorised to edit ticket. Currently, only admin or author can do this.
@@ -92,7 +92,7 @@ def edit_post(post_id):
         return redirect(url_for('flicket_bp.flicket_main'))
 
     # check to see if topic is closed. ticket can't be edited once it's closed.
-    if is_ticket_closed(post.ticket.current_status.status):
+    if post.ticket.current_status and is_ticket_closed(post.ticket.current_status.status):
         return redirect(url_for('flicket_bp.ticket_view', ticket_id=post.ticket.id))
 
     # check user is authorised to edit post. Only author or admin can do this.

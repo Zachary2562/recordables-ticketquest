@@ -247,8 +247,27 @@ class SearchUserForm(FlaskForm):
     submit = SubmitField(str(lazy_gettext('find user')), render_kw=form_class_button)
 
 
-class AssignUserForm(SearchUserForm):
-    """ Search user. """
+class AssignUserForm(FlaskForm):
+    """ Assign user form with dropdown. """
+    username = SelectField(str(lazy_gettext('username')),
+                          validators=[DataRequired()],
+                          choices=[])
+    
+    def __init__(self, *args, **kwargs):
+        super(AssignUserForm, self).__init__(*args, **kwargs)
+        # Dynamically populate choices with admin users
+        from application.flicket.models.flicket_user import FlicketUser
+        from application import app
+        
+        # Get all users who are admins
+        admin_users = []
+        for user in FlicketUser.query.all():
+            if user.is_admin:
+                admin_users.append((user.username, user.name))
+        
+        # Add a default option
+        self.username.choices = [('', 'Select an admin user...')] + admin_users
+    
     submit = SubmitField(str(lazy_gettext('assign user')), render_kw=form_class_button)
 
 

@@ -345,9 +345,6 @@ class FlicketTicket(PaginatedAPIMixin, Base):
 
         ticket_query = FlicketTicket.query
 
-        if kwargs['status']:
-            ticket_query = ticket_query.filter(FlicketTicket.current_status.has(FlicketStatus.status != 'Closed'))
-
         if 'assigned_id' in kwargs:
             if kwargs['assigned_id']:
                 ticket_query = ticket_query.filter_by(assigned_id=kwargs['assigned_id'])
@@ -361,7 +358,9 @@ class FlicketTicket(PaginatedAPIMixin, Base):
             if key == 'status' and value:
                 ticket_query = ticket_query.filter(FlicketTicket.current_status.has(FlicketStatus.status == value))
                 if form:
-                    form.status.data = FlicketStatus.query.filter_by(status=value).first().id
+                    status_obj = FlicketStatus.query.filter_by(status=value).first()
+                    if status_obj:
+                        form.status.data = status_obj.id
 
             if key == 'category' and value:
                 ticket_query = ticket_query.filter(FlicketTicket.category.has(FlicketCategory.category == value))

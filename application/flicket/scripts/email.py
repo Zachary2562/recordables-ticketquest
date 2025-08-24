@@ -9,6 +9,7 @@ from flask_mail import Mail, Message
 from application import app
 from application.flicket.scripts.decorators import send_async_email
 from application.flicket_admin.models.flicket_config import FlicketConfig
+from application.flicket.models.flicket_user import FlicketGroup
 
 
 class FlicketMail:
@@ -44,9 +45,35 @@ class FlicketMail:
         self.sender = config.mail_default_sender
 
     def create_ticket(self, ticket):
-        """"""
-        # todo: send email to department heads
-        pass
+        """Send an email to the ticket creator and developer/admin groups when a ticket is created."""
+
+        # Start with subscribers (includes the creator who is auto-subscribed)
+        recipient_set = set(ticket.get_subscriber_emails())
+
+        # Add emails from admin and super user groups as developer recipients
+        for group_name in [app.config.get('ADMIN_GROUP_NAME'), app.config.get('SUPER_USER_GROUP_NAME')]:
+            if not group_name:
+                continue
+            group = FlicketGroup.query.filter_by(group_name=group_name).first()
+            if group:
+                for user in group.users:
+                    if not getattr(user, 'disabled', False) and getattr(user, 'email', None):
+                        recipient_set.add(user.email)
+
+        recipients = list(recipient_set)
+
+        if len(recipients) == 0:
+            return
+
+        title = f'Ticket #{ticket.id_zfill} - "{ticket.title}" created.'
+        ticket_url = app.config['base_url'] + url_for('flicket_bp.ticket_view', ticket_id=ticket.id)
+        html_body = render_template('email_ticket_create.html',
+                                    title=title,
+                                    number=ticket.id_zfill,
+                                    ticket=ticket,
+                                    ticket_url=ticket_url)
+
+        self.send_email(title, self.sender, recipients, html_body)
 
     def reply_ticket(self, ticket=None, reply=None, user=None):
         """

@@ -17,7 +17,7 @@ from flask_login import login_required
 
 from application import app
 from application.flicket.forms.search import SearchTicketForm
-from application.flicket.models.flicket_models import FlicketTicket
+from application.flicket.models.flicket_models import FlicketTicket, FlicketStatus
 from . import flicket_bp
 
 
@@ -83,8 +83,16 @@ def tickets_view(page, is_my_view=False, subscribed=False):
     ticket_query = ticket_query.paginate(page=page, per_page=app.config['posts_per_page'])
 
     title = gettext('Tickets')
-    if is_my_view:
-        title = gettext('My Tickets')
+    if subscribed:
+        title = gettext('Subscribed Tickets')
+    elif is_my_view:
+        if assigned_id:
+            title = gettext('Assigned Tickets')
+        else:
+            if g.user.is_admin:
+                title = gettext('All Tickets')
+            else:
+                title = gettext('My Tickets')
 
     if content and hasattr(form, 'content') and form is not None:
         form.content.data = content

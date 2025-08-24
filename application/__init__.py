@@ -57,6 +57,43 @@ from application.flicket.models import flicket_user, flicket_models
 # noinspection PyPep8
 from application.flicket_admin.models import flicket_config
 
+# Load database configuration into app config
+def load_db_config():
+    """Load configuration from database into app config"""
+    try:
+        from application.flicket_admin.models.flicket_config import FlicketConfig
+        config = FlicketConfig.query.first()
+        if config:
+            app.config.update(
+                MAIL_SERVER=config.mail_server,
+                MAIL_PORT=config.mail_port,
+                MAIL_USE_TLS=config.mail_use_tls,
+                MAIL_USE_SSL=config.mail_use_ssl,
+                MAIL_DEBUG=config.mail_debug,
+                MAIL_USERNAME=config.mail_username,
+                MAIL_PASSWORD=config.mail_password,
+                MAIL_DEFAULT_SENDER=config.mail_default_sender,
+                MAIL_MAX_EMAILS=config.mail_max_emails,
+                MAIL_SUPPRESS_SEND=config.mail_suppress_send,
+                MAIL_ASCII_ATTACHMENTS=config.mail_ascii_attachments,
+                base_url=config.base_url,
+                application_title=config.application_title,
+                posts_per_page=config.posts_per_page,
+                allowed_extensions=config.allowed_extensions.split(', ') if config.allowed_extensions else [],
+                ticket_upload_folder=config.ticket_upload_folder,
+                avatar_upload_folder=config.avatar_upload_folder,
+                use_auth_domain=config.use_auth_domain,
+                auth_domain=config.auth_domain,
+                csv_dump_limit=config.csv_dump_limit,
+                change_category=config.change_category,
+                change_category_only_admin_or_super_user=config.change_category_only_admin_or_super_user,
+            )
+            # Reinitialize mail with database config
+            mail.init_app(app)
+    except Exception as e:
+        # If database isn't set up yet, use default config
+        pass
+
 lm = LoginManager()
 lm.init_app(app)
 lm.login_view = 'flicket_bp.login'
@@ -191,3 +228,7 @@ def ensure_lang_support():
 from application.commands import register_clicks
 
 register_clicks(app)
+
+# Load database configuration after all models are imported
+with app.app_context():
+    load_db_config()

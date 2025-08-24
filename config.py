@@ -4,7 +4,7 @@ import platform
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class BaseConfiguration(object):
-    DEBUG = False
+    DEBUG = True
     TESTING = False
     EXPLAIN_TEMPLATE_LOADING = False
 
@@ -44,7 +44,15 @@ class BaseConfiguration(object):
 
     SUPPORTED_LANGUAGES = {'en': 'English', 'fr': 'Francais'}
     BABEL_DEFAULT_LOCALE = 'en'
-    BABEL_DEFAULT_TIMEZONE = 'UTC'
+    BABEL_DEFAULT_TIMEZONE = 'US/Eastern'
+
+    # Email configuration
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = 'recordablesticketquest@gmail.com'
+    MAIL_PASSWORD = 'ymra bdxk uduu dpna'
+    MAIL_DEFAULT_SENDER = 'recordablesticketquest@gmail.com'
 
 class TestConfiguration(BaseConfiguration):
     DEBUG = False

@@ -11,9 +11,11 @@
         <div class="col-md-2 col-6 order-2 flicket-tickets-content">
             {{ _('Replies') }}: {{ t.num_replies }}
         </div>
+        {% if g.user.is_admin or g.user.is_super_user %}
         <div class="col-md-2 col-6 order-3 flicket-tickets-content">
             Hours: {{ t.total_hours }}
         </div>
+        {% endif %}
     </div>
 
     <div class="row m-1 {%- if t.current_status.status == 'Closed' %}
@@ -66,6 +68,7 @@
                 {{ t.current_status.status }}
             </div>
         </div>
+        {% if g.user.is_admin or g.user.is_super_user %}
         <div class="col-md-2 col-6">
             <div class="flicket-tickets-title">
                 {{ _('assigned') }}
@@ -74,5 +77,6 @@
                 {{ t.assigned.name }}
             </div>
         </div>
+        {% endif %}
     </div>
 </div>

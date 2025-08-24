@@ -3,59 +3,85 @@
 {% block content %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
     <script src="{{ url_for('flicket_bp.static', filename='js/plotly.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('flicket_bp.static', filename='css/dashboard.css') }}">
 
     <div class="container">
 
-        <div class="row m-2 p-2 border rounded bg-white">
-            <div class="col">
-                <div class="row">
-                    <div class="col text-center">
-                        <h1 class=>{{ _('Open High Priority Tickets') }}</h1>
-                    </div>
-
-
+        <!-- Welcome Header -->
+        <div class="row m-2 p-4 border rounded bg-white">
+            <div class="col text-center">
+                <h1 class="mb-3">Welcome to Recordables TicketQuest™</h1>
+                <p class="lead text-muted mb-3">How can we help you today?</p>
+                
+                <!-- Compact Open Tickets Badge (admin only) -->
+                {% if g.user.is_admin or g.user.is_super_user %}
+                <div class="open-badge mx-auto">
+                    <span class="dot" aria-hidden="true"></span>
+                    <span>Open Tickets:</span>
+                    <span aria-live="polite" aria-atomic="true">{{ open_count }}</span>
                 </div>
-                <div class="row">
-                    <div class="col">
-                        {% if tickets.count() > 0 %}
-                            <div id="carouselExampleControls" class="carousel slide mt-3" data-ride="carousel">
-                                <div class="carousel-inner">
-                                    {% for t in tickets %}
-                                        <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
-                                            {% include('flicket_items.html') %}
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="row m-2 justify-content-center">
+            <div class="col-md-6 mb-3">
+                <div class="dashboard-card h-100">
+                    <div class="d-flex flex-column align-items-center text-center">
+                        <div style="font-size:40px; line-height:1">📩</div>
+                        <h3 class="mt-2">Create New Ticket</h3>
+                        <p class="text-muted">Submit a new support request</p>
+                        <a href="{{ url_for('flicket_bp.ticket_create') }}" class="btn btn-primary">Get Started</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-3">
+                <div class="dashboard-card h-100">
+                    <div class="d-flex flex-column align-items-center text-center">
+                        <div style="font-size:40px; line-height:1">📁</div>
+                        {% if g.user.is_admin or g.user.is_super_user %}
+                        <h3 class="mt-2">All Tickets</h3>
+                        <p class="text-muted">View all tickets in the system</p>
+                        <a href="{{ url_for('flicket_bp.my_tickets') }}" class="btn btn-success">View All</a>
+                        {% else %}
+                        <h3 class="mt-2">My Tickets</h3>
+                        <p class="text-muted">View all your requests</p>
+                        <a href="{{ url_for('flicket_bp.my_tickets') }}" class="btn btn-success">View Tickets</a>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
-
-        <div class="row m-2 p-2 border rounded bg-white">
+        <!-- Quick Stats (if user has tickets) -->
+        {% if tickets.count() > 0 %}
+        <div class="row m-2 p-3 border rounded bg-white">
             <div class="col">
                 <div class="row">
-                    <div class="col">
-                        <h1 class="text-center">{{ _('Statistics') }}</h1>
+                    <div class="col text-center">
+                        <h2 class="text-warning">⚠️ High Priority Tickets</h2>
                     </div>
                 </div>
                 <div class="row">
-
-                    {% for id in ids %}
-                        <div class="col-md-4 col-sm-6">
-                            <div id="{{ id }}"></div>
+                    <div class="col">
+                        <div id="carouselExampleControls" class="carousel slide mt-3" data-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for t in tickets %}
+                                    <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
+                                        {% include('flicket_items.html') %}
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
-                    {% endfor %}
-
+                    </div>
                 </div>
             </div>
-
         </div>
+        {% endif %}
 
     </div>
-
 
     <script type="text/javascript">
         var graphs = {{graph_json | safe}};

@@ -46,29 +46,25 @@
                     + post_loop.index }}</a>
                     |
                 {% endif %}
-                {{ content.date_added.strftime('%d-%m-%Y %H:%M') }}
+                <span class="flicket-tickets-title">Posted:</span> {{ content.date_added.strftime('%b %d, %Y at %I:%M %p EST') }}
             </div>
 
             <div class="col text-right">
-                {% if ( g.user.id == content.user_id ) or (g.user.is_admin) or (g.user.id == ticket.started_id) %}
+                {% if g.user.is_admin or g.user.is_super_user %}
                     {% if post %}
                         <a href="{{ url_for('flicket_bp.edit_post', post_id = content.id) }}">
                             <i class="fas fa-edit"></i>
                         </a>
-                        {% if g.user.is_admin or g.user.is_super_user %}
-                            <a href="{{ url_for('flicket_bp.delete_post', post_id = content.id) }}">
-                                <i class="fas fa-trash" style="color: red;"></i>
-                            </a>
-                        {%- endif -%}
+                        <a href="{{ url_for('flicket_bp.delete_post', post_id = content.id) }}">
+                            <i class="fas fa-trash" style="color: red;"></i>
+                        </a>
                     {% else %}
                         <a href="{{ url_for('flicket_bp.edit_ticket', ticket_id = content.id) }}">
                             <i class="fas fa-edit"></i>
                         </a>
-                        {% if g.user.is_admin or g.user.is_super_user %}
-                            <a href="{{ url_for('flicket_bp.delete_ticket', ticket_id = content.id) }}">
-                                <i class="fas fa-trash" style="color: red;"></i>
-                            </a>
-                        {%- endif -%}
+                        <a href="{{ url_for('flicket_bp.delete_ticket', ticket_id = content.id) }}">
+                            <i class="fas fa-trash" style="color: red;"></i>
+                        </a>
                     {% endif %}
                 {% endif %}
             </div>
@@ -96,10 +92,14 @@
         </div>
 
         <div class="row p-2">
+            <!-- Hours tracking - Only show to staff -->
+            {% if g.user.is_admin or g.user.is_super_user %}
             <div class="col-auto">
                 <span class="flicket-tickets-title">Hours:</span>
                 {{ content.hours }}
             </div>
+            {% endif %}
+            
             <div class="col">
                 {%- if content.uploads -%}
                     {%- for upload in content.uploads %}

@@ -51,6 +51,9 @@
                 <div class="col small align-self-end">
                     {{ form.file(class="form-control-file border-0") }}
                 </div>
+                
+                <!-- Staff-only fields -->
+                {% if g.user.is_admin or g.user.is_super_user %}
                 <div class="col-auto">
                     <label class="col p-0 m-0 flicket-tickets-title">{{ form.status.name }}</label>
                     {{ form.status(class="form-control form-control-xs") }}
@@ -63,14 +66,15 @@
                     <label class="col p-0 m-0 flicket-tickets-title">{{ form.hours.label.text }}</label>
                     {{ form.hours(class="form-control form-control-xs") }}
                 </div>
+                {% endif %}
 
             </div>
             <div class="row mt-2">
                 <div class="col text-right">
 
                     {% if ticket %}
-                    {% if g.user.is_admin or (ticket.user == g.user) or (ticket.assigned_id == g.user.id) %}
-                    <!-- reply and close if admin or ticket owner -->
+                    {% if g.user.is_admin or g.user.is_super_user %}
+                    <!-- reply and close if staff -->
                     {% if ticket.current_status.status != 'Closed' %}
                     {{ form.submit_close(class="btn btn-light btn-outline-danger btn-sm") }}&nbsp;&nbsp;&nbsp;
                     {% endif %}

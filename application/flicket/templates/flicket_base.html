@@ -33,7 +33,7 @@
         });
     </script>
 </head>
-<body>
+<body class="{% if g.user.is_admin or g.user.is_super_user %}is-admin{% endif %}">
 
 {% include 'flicket_navbar.html' %}
 <header>

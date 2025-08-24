@@ -25,13 +25,21 @@ def ticket_assign(ticket_id=False):
     form = AssignUserForm()
     ticket = FlicketTicket.query.filter_by(id=ticket_id).one()
 
-    if ticket.current_status.status == 'Closed':
+    if ticket.current_status and ticket.current_status.status == 'Closed':
         flash(gettext("Can't assign a closed ticket."), category='warning')
         return redirect(url_for('flicket_bp.ticket_view', ticket_id=ticket_id))
 
     if form.validate_on_submit():
 
-        user = FlicketUser.query.filter_by(username=form.username.data).first()
+        # Get the selected username from dropdown
+        selected_username = form.username.data
+        
+        # Find the existing admin user
+        user = FlicketUser.query.filter_by(username=selected_username).first()
+        
+        if not user:
+            flash(gettext('Selected user not found.'), category='warning')
+            return redirect(url_for('flicket_bp.ticket_view', ticket_id=ticket.id))
 
         if ticket.assigned == user:
             flash(gettext('User is already assigned to ticket.'), category='warning')
@@ -39,6 +47,10 @@ def ticket_assign(ticket_id=False):
 
         # set status to in work
         status = FlicketStatus.query.filter_by(status='In Work').first()
+        if not status:
+            # Fallback to 'Open' status if 'In Work' doesn't exist
+            status = FlicketStatus.query.filter_by(status='Open').first()
+        
         # assign ticket
         ticket.assigned = user
         ticket.current_status = status

@@ -10,6 +10,7 @@ from application import app, db
 from application.flicket.scripts.flicket_upload import UploadAttachment
 from application.flicket.models.flicket_models import FlicketTicket, FlicketStatus, FlicketPriority, FlicketCategory, \
     FlicketSubscription, FlicketHistory, FlicketUploads
+from application.flicket.scripts.email import FlicketMail
 
 
 class FlicketTicketExt:
@@ -66,6 +67,13 @@ class FlicketTicketExt:
         user.total_posts += 1
 
         db.session.commit()
+
+        # notify creator and developers/admins
+        try:
+            FlicketMail().create_ticket(new_ticket)
+        except Exception:
+            # fail silently to avoid blocking ticket creation if email fails
+            pass
 
         return new_ticket
 

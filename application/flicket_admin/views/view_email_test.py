@@ -27,13 +27,21 @@ def email_test():
 
     if form.validate_on_submit():
         # send email notification
-        mail = FlicketMail()
-        mail.test_email([form.email_address.data])
-        flash(Markup(gettext(
-            'Flicket has tried to send an email to the address you entered. Please check your inbox. If no email has '
-            'arrived please double check the <a href="{}{url_for("admin_bp.config")}">config</a>'
-            ' settings.'.format(app.config["base_url"]))),
-            category='warning')
+        try:
+            mail = FlicketMail()
+            mail.test_email([form.email_address.data])
+            config_href = app.config.get("base_url", "") + url_for('admin_bp.config')
+            msg = gettext(
+                'Flicket has tried to send an email to the address you entered. Please check your inbox. If no email has '
+                'arrived please double check the <a href="{href}">config</a> settings.'
+            )
+            flash(Markup(msg.format(href=config_href)), category='success')
+        except Exception as e:
+            config_href = app.config.get("base_url", "") + url_for('admin_bp.config')
+            msg = gettext(
+                'Failed to send test email. Error: {error}. Please check the <a href="{href}">config</a> settings.'
+            )
+            flash(Markup(msg.format(error=str(e), href=config_href)), category='error')
 
     return render_template('admin_email_test.html',
                            title='Send Email Test',
