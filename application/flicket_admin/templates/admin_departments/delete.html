@@ -1,0 +1,31 @@
+<!-- extend from base layout -->
+{% extends "flicket_base.html" %}
+
+{% block content %}
+    <!-- {{ self._TemplateReference__context.name }} -->
+    <div class="container">
+        {% include 'admin_menu.html' %}
+        <div class="container mt-4">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="mb-0">{{ title }}</h3>
+                        </div>
+                        <div class="card-body text-center">
+                            <p class="lead mb-4" style="font-weight: bold;">{{ notification }}</p>
+                            <p class="text-muted mb-4">This action cannot be undone.</p>
+                            
+                            <div class="d-flex justify-content-center">
+                                <button type="submit" form="delete-form" class="btn btn-danger" style="margin-right: 20px;">Delete Department</button>
+                                <a href="{{ url_for('admin_bp.departments') }}" class="btn btn-primary">Cancel</a>
+                            </div>
+                            
+                            <form id="delete-form" method="POST" style="display: none;"></form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

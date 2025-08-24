@@ -1,68 +1,74 @@
 <!-- extend from base layout -->
 {% extends "flicket_base.html" %}
+
 {% block content %}
     <!-- {{ self._TemplateReference__context.name }} -->
     <div class="container">
-
         {% include 'admin_menu.html' %}
-
-        <div class="row border rounded m-2 p-2 bg-white">
-            <div class="col"><h2>{{ title }}</h2>
+        <div class=" m-2 p-2 row border rounded bg-white">
+            <div class="col">
+                <h2>{{ title }}</h2>
                 <p>
                     {{ _('Click on group name to edit.') }}
                 </p>
             </div>
         </div>
 
-        <div class="row border rounded bg-white m-2 p-2">
+        <!-- Add Group Form -->
+        <div class=" m-2 p-2 row border rounded bg-white">
             <div class="col">
-                <div class="row border-bottom m-2">
-                    <div class="col">{{ _('Group Name') }}</div>
-                    <div class="col">{{ _('Delete') }}</div>
-                </div>
-                {%- for group in groups -%}
-                    <div class="row m-2">
-                        <div class="col">
-                            <a href="{{ url_for('admin_bp.admin_edit_group', id=group.id) }}">
-                                {{ group.group_name }}
-                            </a>
-                        </div>
-                        <div class="col">
-                            <a href="{{ url_for('admin_bp.admin_delete_group', id=group.id) }}">
-                                {{ _('delete') }}
-                            </a>
-                        </div>
-                    </div>
-                {%- endfor -%}
-
-                <hr/>
-                <h2>{{ _('Add Group') }}</h2>
+                <h3>{{ _('Add Group') }}</h3>
                 <form action="" method="post" name="add_group">
                     {{ form.hidden_tag() }}
-                    <p>
-                        {{ _('Please enter group name.') }}
-                    </p>
-                    <div class="row mb-2">
-                        <div class="col">
-                            {{ _('Group Name') }}
-
-                        </div>
-                        <div class="col">
-                            {{ form.group_name(size=(24)) }}
-                            {% if form.group_name.errors %}
-                                <span style="color: red;">
-                            {% for error in form.group_name.errors %}
-                                [{{ error }}]
-                            {% endfor %}
-                                </span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col text-center">
-                            <input class="btn btn-primary" type="submit" value="add group"/></div>
+                    <div class="mb-2">
+                        <label style="display: inline-block; margin-right: 10px;">{{ _('Group Name') }}</label>
+                        {{ form.group_name(size=(24), style="display: inline-block; margin-right: 10px;") }}
+                        {% if form.group_name.errors %}
+                            <span style="color: red;">
+                        {% for error in form.group_name.errors %}
+                            [{{ error }}]
+                        {% endfor %}
+                            </span>
+                        {% endif %}
+                        <input class="btn btn-primary" type="submit" value="add group" style="display: inline-block;"/>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                {% for group in groups %}
+
+                    <div class="border rounded bg-white m-2 p-1 pl-3 pr-3">
+
+                        <div class="row">
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Group Name') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    {{ group.group_name }}
+                                    <a href="{{ url_for('admin_bp.admin_edit_group', id=group.id) }}" title="{{ _('edit') }}">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </div>
+
+                            <div class="col">
+                                <div class="flicket-tickets-title">
+                                    {{ _('Delete Group') }}
+                                </div>
+                                <div class="flicket-tickets-content">
+                                    <a href="{{ url_for('admin_bp.admin_delete_group', id=group.id) }}" title="{{ _('delete') }}">
+                                        <i class="fas fa-trash" style="color: red;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
     </div>

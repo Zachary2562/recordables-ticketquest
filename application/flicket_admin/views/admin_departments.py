@@ -87,7 +87,6 @@ def delete_department(department_id):
         return redirect(url_for('admin_bp.index'))
 
     department = FlicketDepartment.query.get_or_404(department_id)
-    form = EnterPasswordForm()
 
     # Check if department has categories linked to it
     if len(department.categories) > 0:
@@ -97,17 +96,19 @@ def delete_department(department_id):
             category="danger")
         return redirect(url_for('admin_bp.departments'))
 
-    if form.validate_on_submit():
+    # Simple confirmation - if POST request, delete the department
+    if request.method == 'POST':
+        department_name = department.department
         db.session.delete(department)
         db.session.commit()
-        flash(gettext('Department "{}" deleted.'.format(department.department)), category='success')
+        flash(gettext('Department "{}" deleted.'.format(department_name)), category='success')
         return redirect(url_for('admin_bp.departments'))
 
     notification = gettext(
         "You are trying to delete department: %(value)s.",
         value=department.department.upper())
 
-    return render_template('flicket_delete.html',
-                           form=form,
+    return render_template('admin_departments/delete.html',
+                           department=department,
                            notification=notification,
                            title='Delete Department') 

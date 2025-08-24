@@ -11,7 +11,7 @@
 
     <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav mr-auto">
-            {% if g.user.is_admin %}
+            {% if g.user.is_admin or g.user.is_super_user %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('flicket_bp.my_tickets', assigned_id=g.user.id) }}" title="Tickets assigned to you.">{{ _('Assigned') }}</a>
                 </li>
@@ -29,7 +29,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ url_for('flicket_bp.ticket_create') }}">{{ _('Create Ticket') }}</a>
             </li>
-            {% if g.user.is_admin %}
+            {% if g.user.is_admin or g.user.is_super_user %}
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('admin_bp.index') }}">{{ _('Admin View') }}</a>
                 </li>

@@ -11,6 +11,7 @@
                 <p>
                     {{ _('Click on department name to edit.') }}
                 </p>
+                <a href="{{ url_for('admin_bp.add_department') }}" class="btn btn-primary mb-2">Add Department</a>
             </div>
         </div>
         <ul class="m-2 pagination pagination-sm">{% for page in departments.iter_pages() %}
