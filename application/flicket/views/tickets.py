@@ -12,13 +12,17 @@ from flask import make_response
 from flask import render_template
 from flask import Response
 from flask import url_for
+from flask import flash
 from flask_babel import gettext
 from flask_login import login_required
 
-from application import app
+from application import app, db
 from application.flicket.forms.search import SearchTicketForm
 from application.flicket.models.flicket_models import FlicketTicket, FlicketStatus
 from . import flicket_bp
+
+# Import the Mock classes from index.py
+from .index import MockTicket, MockUser, MockCategory, MockDepartment, MockPriority, MockStatus
 
 
 def clean_csv_data(input_text):
@@ -67,20 +71,116 @@ def tickets_view(page, is_my_view=False, subscribed=False):
         sort = 'priority_desc'
         set_cookie = False
 
-    ticket_query, form = FlicketTicket.query_tickets(form, department=department, category=category, status=status,
-                                                     user_id=user_id, content=content, assigned_id=assigned_id,
-                                                     created_id=created_id)
-    if is_my_view:
-        if not g.user.is_admin:
-            ticket_query = FlicketTicket.my_tickets(ticket_query)
-    ticket_query = FlicketTicket.sorted_tickets(ticket_query, sort)
+    # Create a simple pagination object
+    class SimplePagination:
+        def __init__(self, items, page, per_page, total):
+            self.items = items
+            self.page = page
+            self.per_page = per_page
+            self.total = total
+            self.pages = (total + per_page - 1) // per_page
+            
+        def iter_pages(self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+            last = 0
+            for num in range(1, self.pages + 1):
+                if num <= left_edge or (num > self.page - left_current - 1 and num < self.page + right_current) or num > self.pages - right_edge:
+                    if last + 1 != num:
+                        yield None
+                    yield num
+                    last = num
+                    
+        @property
+        def has_prev(self):
+            return self.page > 1
+            
+        @property
+        def has_next(self):
+            return self.page < self.pages
+            
+        @property
+        def prev_num(self):
+            return self.page - 1 if self.has_prev else None
+            
+        @property
+        def next_num(self):
+            return self.page + 1 if self.has_next else None
 
-    if subscribed:
-        ticket_query = FlicketTicket.my_subscribed_tickets(ticket_query)
-
-    number_results = ticket_query.count()
-
-    ticket_query = ticket_query.paginate(page=page, per_page=app.config['posts_per_page'])
+    # Use raw SQL to avoid datetime parsing issues
+    try:
+        # Build the base SQL query
+        sql_query = """
+            SELECT t.id, t.title, t.content, t.date_added, 
+                   u.name as user_name, d.department as dept_name, c.category as cat_name,
+                   p.priority as priority_name, s.status as status_name,
+                   au.name as assigned_name,
+                   (SELECT COUNT(*) FROM flicket_post WHERE ticket_id = t.id) as num_replies,
+                   t.hours
+            FROM flicket_topic t
+            LEFT JOIN flicket_users u ON t.started_id = u.id
+            LEFT JOIN flicket_category c ON t.category_id = c.id
+            LEFT JOIN flicket_department d ON c.department_id = d.id
+            LEFT JOIN flicket_priorities p ON t.ticket_priority_id = p.id
+            LEFT JOIN flicket_status s ON t.status_id = s.id
+            LEFT JOIN flicket_users au ON t.assigned_id = au.id
+            WHERE 1=1
+        """
+        
+        # Add filters
+        if status:
+            sql_query += f" AND s.status = '{status}'"
+        if department:
+            sql_query += f" AND d.department = '{department}'"
+        if category:
+            sql_query += f" AND c.category = '{category}'"
+        if user_id:
+            sql_query += f" AND t.started_id = {user_id}"
+        if assigned_id:
+            sql_query += f" AND t.assigned_id = {assigned_id}"
+        if created_id:
+            sql_query += f" AND t.started_id = {created_id}"
+        if content:
+            sql_query += f" AND (t.title LIKE '%{content}%' OR t.content LIKE '%{content}%')"
+            
+        # Filter for user's own tickets if needed
+        if is_my_view and not g.user.is_admin:
+            sql_query += f" AND t.started_id = {g.user.id}"
+            
+        # Add sorting
+        if sort == 'priority_desc':
+            sql_query += " ORDER BY p.id DESC, t.id DESC"
+        elif sort == 'priority_asc':
+            sql_query += " ORDER BY p.id ASC, t.id DESC"
+        elif sort == 'date_desc':
+            sql_query += " ORDER BY t.date_added DESC"
+        elif sort == 'date_asc':
+            sql_query += " ORDER BY t.date_added ASC"
+        elif sort == 'title_asc':
+            sql_query += " ORDER BY t.title ASC"
+        elif sort == 'title_desc':
+            sql_query += " ORDER BY t.title DESC"
+        else:
+            sql_query += " ORDER BY t.id DESC"
+            
+        # Execute the query
+        result = db.session.execute(sql_query)
+        all_tickets = [MockTicket(dict(row)) for row in result]
+        
+        # Calculate total count
+        number_results = len(all_tickets)
+        
+        # Manual pagination
+        per_page = app.config['posts_per_page']
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        ticket_query = all_tickets[start_idx:end_idx]
+        
+        ticket_query = SimplePagination(ticket_query, page, per_page, number_results)
+        
+    except Exception as e:
+        print(f"Error querying tickets: {e}")
+        # Fallback to empty results
+        number_results = 0
+        ticket_query = SimplePagination([], page, app.config['posts_per_page'], 0)
 
     title = gettext('Tickets')
     if subscribed:
@@ -123,69 +223,27 @@ def tickets_view(page, is_my_view=False, subscribed=False):
 @flicket_bp.route(app.config['FLICKET'] + 'tickets/<int:page>/', methods=['GET', 'POST'])
 @login_required
 def tickets(page=1):
-    # Redirect non-admin users to admin tickets view if they have access
-    if g.user.is_admin or g.user.is_super_user:
-        args = {k: v for k, v in request.args.items() if k not in ['_external', '_scheme', '_anchor']}
-        return redirect(url_for('admin_bp.tickets', page=page, **args))  # type: ignore[arg-type]
+    # Only allow admin users to access the tickets view
+    if not (g.user.is_admin or g.user.is_super_user):
+        flash(gettext('Access denied. Only administrators can view all tickets.'), category='warning')
+        return redirect(url_for('flicket_bp.index'))
     
-    # For regular users, show only their tickets (my_tickets functionality)
-    response = tickets_view(page, is_my_view=True)
-    return response
+    # Redirect admin users to admin tickets view
+    args = {k: v for k, v in request.args.items() if k not in ['_external', '_scheme', '_anchor']}
+    return redirect(url_for('admin_bp.tickets', page=page, **args))  # type: ignore[arg-type]
 
 
 @flicket_bp.route(app.config['FLICKET'] + 'tickets_csv/', methods=['GET', 'POST'])
 @login_required
 def tickets_csv():
-    # Redirect admin users to admin CSV export
-    if g.user.is_admin or g.user.is_super_user:
-        args = {k: v for k, v in request.args.items() if k not in ['_external', '_scheme', '_anchor']}
-        return redirect(url_for('admin_bp.tickets_csv', **args))  # type: ignore[arg-type]
+    # Only allow admin users to access the tickets CSV export
+    if not (g.user.is_admin or g.user.is_super_user):
+        flash(gettext('Access denied. Only administrators can export tickets.'), category='warning')
+        return redirect(url_for('flicket_bp.index'))
     
-    # For regular users, limit to their own tickets
-    status = request.args.get('status')
-    department = request.args.get('department')
-    category = request.args.get('category')
-    content = request.args.get('content')
-    user_id = request.args.get('user_id')
-
-    ticket_query, form = FlicketTicket.query_tickets(department=department, category=category, status=status,
-                                                     user_id=user_id, content=content)
-    # Filter to user's own tickets
-    ticket_query = FlicketTicket.my_tickets(ticket_query)
-    ticket_query = ticket_query.limit(app.config['csv_dump_limit'])
-
-    date_stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    file_name = date_stamp + 'my_ticketdump.csv'
-
-    csv_contents = 'Ticket_ID,Priority,Title,Submitted By,Date,Replies,Category,Status,Assigned,URL\n'
-    for ticket in ticket_query:
-
-        if hasattr(ticket.assigned, 'name'):
-            _name = ticket.assigned.name
-        else:
-            _name = 'Not assigned'
-
-        csv_contents += '{},{},"{}",{},{},{},{} - {},{},{},{}{}\n'.format(ticket.id_zfill,
-                                                                          ticket.ticket_priority.priority,
-                                                                          clean_csv_data(ticket.title),
-                                                                          ticket.user.name,
-                                                                          ticket.date_added.strftime("%Y-%m-%d"),
-                                                                          ticket.num_replies,
-                                                                          clean_csv_data(
-                                                                              ticket.category.department.department),
-                                                                          clean_csv_data(ticket.category.category),
-                                                                          ticket.current_status.status,
-                                                                          _name,
-                                                                          app.config["base_url"],
-                                                                          url_for("flicket_bp.ticket_view",
-                                                                                  ticket_id=ticket.id))
-
-    return Response(
-        csv_contents,
-        mimetype='text/csv',
-        headers={"Content-disposition":
-                     f"attachment; filename={file_name}"}
-    )
+    # Redirect admin users to admin CSV export
+    args = {k: v for k, v in request.args.items() if k not in ['_external', '_scheme', '_anchor']}
+    return redirect(url_for('admin_bp.tickets_csv', **args))  # type: ignore[arg-type]
 
 
 @flicket_bp.route(app.config['FLICKET'] + 'my_tickets/', methods=['GET', 'POST'])

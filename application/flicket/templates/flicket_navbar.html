@@ -19,7 +19,10 @@
                     <a class="nav-link" href="{{ url_for('flicket_bp.subscribed') }}" title="Tickets you are subscribed to.">{{ _('Subscribed') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('flicket_bp.my_tickets') }}" title="All your tickets.">{{ _('All Tickets') }}</a>
+                    <a class="nav-link" href="{{ url_for('flicket_bp.my_tickets') }}" title="Your tickets.">{{ _('My Tickets') }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_bp.tickets') }}" title="All tickets in the system.">{{ _('All Tickets') }}</a>
                 </li>
             {% else %}
                 <li class="nav-item">

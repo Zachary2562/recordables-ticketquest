@@ -4,6 +4,73 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
     <script src="{{ url_for('flicket_bp.static', filename='js/plotly.min.js') }}"></script>
     <link rel="stylesheet" href="{{ url_for('flicket_bp.static', filename='css/dashboard.css') }}">
+    <style>
+        /* Always show carousel controls */
+        .carousel-control-prev,
+        .carousel-control-next {
+            display: block !important;
+            opacity: 0.95;
+            background-color: #ffffff;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            top: 10px;
+            transform: none;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carousel-control-prev {
+            left: 10px;
+        }
+        
+        .carousel-control-next {
+            right: 10px;
+        }
+        
+        .carousel-control-prev:hover,
+        .carousel-control-next:hover {
+            opacity: 1;
+            background-color: #f8f9fa;
+            border-color: #007bff;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+        
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            width: 16px;
+            height: 16px;
+            filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(190deg) brightness(118%) contrast(119%);
+        }
+        
+        /* Style carousel indicators */
+        .carousel-indicators {
+            bottom: -30px;
+        }
+        
+        .carousel-indicators li {
+            background-color: #007bff;
+            border: 1px solid #007bff;
+        }
+        
+        .carousel-indicators li.active {
+            background-color: #0056b3;
+        }
+        
+        /* Fix High Priority badge text color */
+        .badge-warning {
+            color: #fff !important;
+        }
+        
+        /* Position carousel relative to ticket content */
+        .carousel {
+            position: relative;
+            padding: 0 40px;
+        }
+    </style>
 
     <div class="container">
 
@@ -55,7 +122,8 @@
             </div>
         </div>
 
-        <!-- Priority Tickets Sections -->
+        <!-- Priority Tickets Sections (Admin Only) -->
+        {% if g.user.is_admin or g.user.is_super_user %}
         {% if urgent_tickets|length > 0 or high_tickets|length > 0 or medium_tickets|length > 0 or low_tickets|length > 0 %}
         
         <!-- Urgent Priority Tickets -->
@@ -64,12 +132,20 @@
             <div class="col">
                 <div class="row">
                     <div class="col text-center">
-                        <h2 class="text-danger">🚨 Urgent Priority Tickets</h2>
+                        <h2 class="text-danger">Urgent Priority Tickets <span class="badge badge-danger">{{ urgent_tickets|length }}</span></h2>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
                         <div id="carouselUrgent" class="carousel slide mt-3" data-ride="carousel">
+                            <a class="carousel-control-prev" href="#carouselUrgent" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#carouselUrgent" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
                             <div class="carousel-inner">
                                 {% for t in urgent_tickets %}
                                     <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
@@ -77,6 +153,11 @@
                                     </div>
                                 {% endfor %}
                             </div>
+                            <ol class="carousel-indicators">
+                                {% for t in urgent_tickets %}
+                                <li data-target="#carouselUrgent" data-slide-to="{{ loop.index0 }}" {% if loop.first %}class="active"{% endif %}></li>
+                                {% endfor %}
+                            </ol>
                         </div>
                     </div>
                 </div>
@@ -90,12 +171,20 @@
             <div class="col">
                 <div class="row">
                     <div class="col text-center">
-                        <h2 class="text-warning">⚠️ High Priority Tickets</h2>
+                        <h2 style="color: #ffc107;">High Priority Tickets <span class="badge badge-warning">{{ high_tickets|length }}</span></h2>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
                         <div id="carouselHigh" class="carousel slide mt-3" data-ride="carousel">
+                            <a class="carousel-control-prev" href="#carouselHigh" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#carouselHigh" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
                             <div class="carousel-inner">
                                 {% for t in high_tickets %}
                                     <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
@@ -103,6 +192,11 @@
                                     </div>
                                 {% endfor %}
                             </div>
+                            <ol class="carousel-indicators">
+                                {% for t in high_tickets %}
+                                <li data-target="#carouselHigh" data-slide-to="{{ loop.index0 }}" {% if loop.first %}class="active"{% endif %}></li>
+                                {% endfor %}
+                            </ol>
                         </div>
                     </div>
                 </div>
@@ -116,12 +210,20 @@
             <div class="col">
                 <div class="row">
                     <div class="col text-center">
-                        <h2 class="text-info">ℹ️ Medium Priority Tickets</h2>
+                        <h2 class="text-info">Medium Priority Tickets <span class="badge badge-info">{{ medium_tickets|length }}</span></h2>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
                         <div id="carouselMedium" class="carousel slide mt-3" data-ride="carousel">
+                            <a class="carousel-control-prev" href="#carouselMedium" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#carouselMedium" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
                             <div class="carousel-inner">
                                 {% for t in medium_tickets %}
                                     <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
@@ -129,6 +231,11 @@
                                     </div>
                                 {% endfor %}
                             </div>
+                            <ol class="carousel-indicators">
+                                {% for t in medium_tickets %}
+                                <li data-target="#carouselMedium" data-slide-to="{{ loop.index0 }}" {% if loop.first %}class="active"{% endif %}></li>
+                                {% endfor %}
+                            </ol>
                         </div>
                     </div>
                 </div>
@@ -142,12 +249,20 @@
             <div class="col">
                 <div class="row">
                     <div class="col text-center">
-                        <h2 class="text-success">✅ Low Priority Tickets</h2>
+                        <h2 class="text-success">Low Priority Tickets <span class="badge badge-success">{{ low_tickets|length }}</span></h2>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
                         <div id="carouselLow" class="carousel slide mt-3" data-ride="carousel">
+                            <a class="carousel-control-prev" href="#carouselLow" role="button" data-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Previous</span>
+                            </a>
+                            <a class="carousel-control-next" href="#carouselLow" role="button" data-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="sr-only">Next</span>
+                            </a>
                             <div class="carousel-inner">
                                 {% for t in low_tickets %}
                                     <div class="bg-white carousel-item {% if loop.first %} active {% endif %}">
@@ -155,6 +270,11 @@
                                     </div>
                                 {% endfor %}
                             </div>
+                            <ol class="carousel-indicators">
+                                {% for t in low_tickets %}
+                                <li data-target="#carouselLow" data-slide-to="{{ loop.index0 }}" {% if loop.first %}class="active"{% endif %}></li>
+                                {% endfor %}
+                            </ol>
                         </div>
                     </div>
                 </div>
@@ -162,6 +282,7 @@
         </div>
         {% endif %}
 
+        {% endif %}
         {% endif %}
 
     </div>
