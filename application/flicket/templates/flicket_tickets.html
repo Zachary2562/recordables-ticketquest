@@ -230,7 +230,7 @@
                                     {{ _('created') }}
                                 </div>
                                 <div class="flicket-tickets-content">
-                                    {{ t.date_added.strftime('%Y-%m-%d') }}
+                                    {{ t.date_added }}
                                 </div>
                             </div>
                             <div class="col-md-1 col-6">
@@ -238,7 +238,7 @@
                                     {{ _('updated') }}
                                 </div>
                                 <div class="flicket-tickets-content" title=" {{ _('date of last reply, action, edit ...') }}">
-                                    {{ t.last_updated.strftime('%Y-%m-%d') }}
+                                    {{ t.date_added[:10] if t.date_added and t.date_added != 'No Date' else 'No Date' }}
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
