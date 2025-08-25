@@ -56,10 +56,10 @@
         </div>
 
         <!-- Priority Tickets Sections -->
-        {% if len(urgent_tickets) > 0 or len(high_tickets) > 0 or len(medium_tickets) > 0 or len(low_tickets) > 0 %}
+        {% if urgent_tickets|length > 0 or high_tickets|length > 0 or medium_tickets|length > 0 or low_tickets|length > 0 %}
         
         <!-- Urgent Priority Tickets -->
-        {% if len(urgent_tickets) > 0 %}
+        {% if urgent_tickets|length > 0 %}
         <div class="row m-2 p-3 border rounded bg-white">
             <div class="col">
                 <div class="row">
@@ -85,7 +85,7 @@
         {% endif %}
 
         <!-- High Priority Tickets -->
-        {% if len(high_tickets) > 0 %}
+        {% if high_tickets|length > 0 %}
         <div class="row m-2 p-3 border rounded bg-white">
             <div class="col">
                 <div class="row">
@@ -111,7 +111,7 @@
         {% endif %}
 
         <!-- Medium Priority Tickets -->
-        {% if len(medium_tickets) > 0 %}
+        {% if medium_tickets|length > 0 %}
         <div class="row m-2 p-3 border rounded bg-white">
             <div class="col">
                 <div class="row">
@@ -137,7 +137,7 @@
         {% endif %}
 
         <!-- Low Priority Tickets -->
-        {% if len(low_tickets) > 0 %}
+        {% if low_tickets|length > 0 %}
         <div class="row m-2 p-3 border rounded bg-white">
             <div class="col">
                 <div class="row">
