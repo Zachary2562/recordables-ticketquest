@@ -140,7 +140,7 @@
                         <div class="list-group-item">
                             <div class="d-flex justify-content-between">
                                 <strong>{{ content.user.name }}</strong>
-                                <small class="text-muted">{{ content.date_added.strftime('%b %d, %Y at %I:%M %p EST') }}</small>
+                                <small class="text-muted">{{ content.date_added }}</small>
                             </div>
                             <div class="mt-2">{{ content.content|safe }}</div>
                             {% if content.uploads %}
