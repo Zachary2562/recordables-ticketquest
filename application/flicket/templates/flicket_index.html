@@ -1,8 +1,8 @@
 {% extends "flicket_base.html" %}
 <!-- extend from base layout -->
 {% block content %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
-    <script src="{{ url_for('flicket_bp.static', filename='js/plotly.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" onerror="console.warn('D3.js failed to load')"></script>
+    <script src="{{ url_for('flicket_bp.static', filename='js/plotly.min.js') }}" onerror="console.warn('Plotly.js failed to load')"></script>
     <link rel="stylesheet" href="{{ url_for('flicket_bp.static', filename='css/dashboard.css') }}">
     <style>
         /* Always show carousel controls */
@@ -288,13 +288,35 @@
     </div>
 
     <script type="text/javascript">
+        // Wait for Plotly to be available
+        function initPlotly() {
+            if (typeof Plotly !== 'undefined' && graphs && ids) {
+                try {
+                    for (var i in graphs) {
+                        if (ids[i] && document.getElementById(ids[i])) {
+                            Plotly.plot(ids[i], // the ID of the div, created above
+                                graphs[i].data,
+                                graphs[i].layout || {},
+                                {responsive: true});
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Plotly initialization error:', error);
+                }
+            } else {
+                // Retry after a short delay if Plotly isn't loaded yet
+                setTimeout(initPlotly, 100);
+            }
+        }
+        
         var graphs = {{graph_json | safe}};
         var ids = {{ids | safe}};
-        for (var i in graphs) {
-            Plotly.plot(ids[i], // the ID of the div, created above
-                graphs[i].data,
-                graphs[i].layout || {},
-                {responsive: true});
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initPlotly);
+        } else {
+            initPlotly();
         }
     </script>
 
