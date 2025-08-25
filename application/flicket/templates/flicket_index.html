@@ -1,3 +1,4 @@
+<!-- This is a Jinja2 HTML template file, not a JavaScript file -->
 {% extends "flicket_base.html" %}
 <!-- extend from base layout -->
 {% block content %}
@@ -309,8 +310,11 @@
             }
         }
         
+        /* eslint-disable */
+        // Jinja2 template variables - these are server-side rendered
         var graphs = {{graph_json | safe}};
         var ids = {{ids | safe}};
+        /* eslint-enable */
         
         // Initialize when DOM is ready
         if (document.readyState === 'loading') {
